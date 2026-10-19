@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="720" viewBox="0 0 1500 720">
+<rect width="1500" height="720" fill="#f7f9fb"/>
+<text x="70" y="74" font-family="Arial,sans-serif" font-size="40" font-weight="700" fill="#15354b">Esri Polygon Rings → GeoJSON Polygon / MultiPolygon</text>
+<text x="70" y="116" font-family="Arial,sans-serif" font-size="21" fill="#526777">Parcel100 reconstructs topology rather than blindly copying ring arrays.</text>
+<g transform="translate(100,190)" stroke="#2b6f95" fill="#ffffff" stroke-width="5">
+  <path d="M20 40 L330 20 L370 240 L50 280 Z"/>
+  <path d="M120 100 L245 90 L265 190 L135 205 Z"/>
+</g>
+<text x="235" y="525" text-anchor="middle" font-family="Arial,sans-serif" font-size="27" font-weight="700" fill="#15354b">ArcGIS rings</text>
+<text x="235" y="560" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" fill="#526777">outer + inner ring(s)</text>
+<g stroke="#2b6f95" stroke-width="6" fill="none"><path d="M520 340H825"/></g>
+<polygon points="825,340 800,326 800,354" fill="#2b6f95"/>
+<g font-family="Arial,sans-serif" font-size="18" fill="#526777" text-anchor="middle">
+<text x="675" y="275">1. close rings</text><text x="675" y="305">2. remove degenerate rings</text><text x="675" y="335">3. compute area</text><text x="675" y="365">4. build containment tree</text><text x="675" y="395">5. classify outers and holes</text>
+</g>
+<g transform="translate(900,190)" stroke="#2b6f95" fill="#ffffff" stroke-width="5">
+  <path d="M20 40 L330 20 L370 240 L50 280 Z"/>
+  <path d="M120 100 L245 90 L265 190 L135 205 Z" fill="#f7f9fb"/>
+</g>
+<text x="1095" y="525" text-anchor="middle" font-family="Arial,sans-serif" font-size="27" font-weight="700" fill="#15354b">GeoJSON Polygon</text>
+<text x="1095" y="560" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" fill="#526777">coordinates = [outer, hole, ...]</text>
+<text x="70" y="650" font-family="Arial,sans-serif" font-size="20" fill="#526777">Multiple independent outer rings become a MultiPolygon. The containment method is intentionally independent of ring winding direction.</text>
+</svg>
