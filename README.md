@@ -74,6 +74,8 @@ If another state or county publishes a public ArcGIS FeatureServer parcel layer,
 
 Then click **Read Service**. Parcel100 interrogates that layer and presents its own field names. Different jurisdictions may call the same concepts `OWNER`, `APN`, `PIN`, `SITE_ADDR`, `PARCEL_ID`, or something else, so the operator chooses the fields appropriate to that source.
 
+**Need help locating the real data layer behind a public parcel map?** See [FIND_A_PARCEL_SERVICE.md](FIND_A_PARCEL_SERVICE.md).
+
 Parcel100 does **not** bypass authentication or access controls. The source layer must be publicly accessible, or otherwise accessible to the operator outside this tool.
 
 ## Why 100 files?
@@ -151,10 +153,15 @@ The two remain separate layers, so parcel boundaries and attributes stay clickab
 ## Documentation
 
 - [USER_MANUAL.md](USER_MANUAL.md) - step-by-step operation.
+- [FIND_A_PARCEL_SERVICE.md](FIND_A_PARCEL_SERVICE.md) - how to locate the real FeatureServer behind a public parcel map.
 - [TECHNICAL.md](TECHNICAL.md) - service queries, cell logic, geometry conversion and output behavior.
+- [CONTINUITY.md](CONTINUITY.md) - current project handoff and proven field state.
+- [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) - public-release/regression checklist.
 - [CHANGELOG.md](CHANGELOG.md) - release history.
 - [LEGAL.md](LEGAL.md) - data-source, privacy, accuracy and trademark notes.
 - [CREDITS.md](CREDITS.md) - project and collaboration credits.
+- [CONTRIBUTING.md](CONTRIBUTING.md) - compatibility and contribution expectations.
+- [SECURITY.md](SECURITY.md) - security/privacy reporting guidance.
 - [LICENSE](LICENSE) - MIT License.
 
 ## Human-AI engineering collaboration
