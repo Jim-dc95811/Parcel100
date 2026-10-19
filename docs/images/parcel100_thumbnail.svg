@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0d2331"/><stop offset="1" stop-color="#183f53"/></linearGradient></defs>
+<rect width="1600" height="900" fill="url(#bg)"/>
+<g opacity="0.22" stroke="#8fd1db" fill="none" stroke-width="2">
+<path d="M30 130L370 70L520 290L280 420L40 350Z"/><path d="M400 80L740 50L860 260L620 430L470 320Z"/><path d="M800 90L1180 40L1260 300L1010 390L850 270Z"/><path d="M1120 310L1550 180L1580 560L1270 650L1050 510Z"/><path d="M80 500L430 390L590 690L260 830L40 720Z"/>
+</g>
+<text x="80" y="175" font-family="Arial,sans-serif" font-size="104" font-weight="900" fill="#ffffff">PARCEL100</text>
+<text x="84" y="245" font-family="Arial,sans-serif" font-size="44" font-weight="700" fill="#5de2ee">1 MASTER 4 → 100 GEOJSONs</text>
+<g transform="translate(90,340)">
+<rect width="650" height="340" rx="22" fill="#f5f7f9" stroke="#6ea4bd" stroke-width="5"/>
+<rect x="0" y="0" width="650" height="55" rx="22" fill="#dfe8ee"/><text x="26" y="38" font-family="Arial" font-size="27" font-weight="700" fill="#17394b">Parcel100 1.3</text>
+<text x="28" y="100" font-family="Arial" font-size="21" fill="#233f4d">Master 4</text><rect x="28" y="112" width="575" height="42" fill="#fff" stroke="#9aadb8"/><text x="42" y="141" font-family="Arial" font-size="20" fill="#17394b">82w,81w,30n,31n</text>
+<text x="28" y="190" font-family="Arial" font-size="21" fill="#233f4d">FeatureServer URL + selected fields</text>
+<rect x="28" y="210" width="575" height="70" fill="#fff" stroke="#9aadb8"/><text x="42" y="240" font-family="Arial" font-size="18" fill="#17394b">OWN_NAME   PHY_ADDR1   PHY_CITY</text><text x="42" y="266" font-family="Arial" font-size="18" fill="#17394b">PHY_ZIPCD  PARCEL_ID</text>
+<rect x="28" y="295" width="575" height="36" rx="7" fill="#1a8da8"/><text x="315" y="320" text-anchor="middle" font-family="Arial" font-size="19" font-weight="700" fill="#fff">BUILD 100 GEOJSON FILES</text>
+</g>
+<g transform="translate(870,330)">
+<rect width="620" height="390" rx="22" fill="#111b22" stroke="#5de2ee" stroke-width="5"/>
+<text x="35" y="52" font-family="Arial" font-size="26" font-weight="700" fill="#fff">ArcGIS Earth Ready</text>
+<g transform="translate(45,85)" stroke="#a8c3cb" fill="#f7fafb" stroke-width="2"><path d="M0 0H505V240H0Z"/><path d="M0 70H505M0 145H505M100 0V240M215 0V240M350 0V240M440 0V240"/></g>
+<rect x="230" y="165" width="160" height="72" rx="8" fill="#22c7d4" opacity="0.8"/>
+<rect x="315" y="205" width="250" height="135" rx="10" fill="#202b32"/><text x="335" y="235" font-family="Arial" font-size="18" fill="#fff">OWN_NAME</text><text x="335" y="262" font-family="Arial" font-size="18" fill="#5de2ee">Example Owner</text><text x="335" y="298" font-family="Arial" font-size="18" fill="#fff">PHY_ADDR1</text><text x="335" y="325" font-family="Arial" font-size="18" fill="#5de2ee">123 Example Rd</text>
+</g>
+<rect x="80" y="770" width="520" height="70" rx="35" fill="#e9a620"/><text x="340" y="817" text-anchor="middle" font-family="Arial" font-size="31" font-weight="800" fill="#122a37">OFFLINE PROPERTY INTELLIGENCE</text>
+<text x="875" y="805" font-family="Arial" font-size="34" font-weight="700" fill="#ffffff">Who owns this property?</text>
+<text x="875" y="847" font-family="Arial" font-size="27" fill="#a7dbe3">Click the parcel. Get the answer.</text>
+</svg>
