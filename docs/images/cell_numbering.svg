@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+<rect width="1200" height="900" fill="#f7f9fb"/>
+<text x="60" y="70" font-family="Arial,sans-serif" font-size="40" font-weight="700" fill="#15354b">Master 4 → 100 Deterministic Parcel Cells</text>
+<text x="60" y="110" font-family="Arial,sans-serif" font-size="22" fill="#526777">One 1° × 1° box divided into a 10 × 10 grid; each output cell is 0.1° × 0.1°.</text>
+<g transform="translate(175,155)" stroke="#2b6f95" stroke-width="2" fill="#ffffff">
+  <rect x="0" y="0" width="700" height="700" stroke-width="6"/>
+  <path d="M70 0V700M140 0V700M210 0V700M280 0V700M350 0V700M420 0V700M490 0V700M560 0V700M630 0V700"/>
+  <path d="M0 70H700M0 140H700M0 210H700M0 280H700M0 350H700M0 420H700M0 490H700M0 560H700M0 630H700"/>
+</g>
+<g font-family="Arial,sans-serif" font-size="17" fill="#15354b" text-anchor="middle">
+<text x="210" y="193">001</text><text x="280" y="193">002</text><text x="350" y="193">003</text><text x="420" y="193">004</text><text x="490" y="193">005</text><text x="560" y="193">006</text><text x="630" y="193">007</text><text x="700" y="193">008</text><text x="770" y="193">009</text><text x="840" y="193">010</text>
+<text x="210" y="263">011</text><text x="840" y="263">020</text><text x="210" y="333">021</text><text x="840" y="333">030</text><text x="210" y="403">031</text><text x="840" y="403">040</text><text x="210" y="473">041</text><text x="840" y="473">050</text><text x="210" y="543">051</text><text x="840" y="543">060</text><text x="210" y="613">061</text><text x="840" y="613">070</text><text x="210" y="683">071</text><text x="840" y="683">080</text><text x="210" y="753">081</text><text x="840" y="753">090</text><text x="210" y="823">091</text><text x="280" y="823">092</text><text x="350" y="823">093</text><text x="420" y="823">094</text><text x="490" y="823">095</text><text x="560" y="823">096</text><text x="630" y="823">097</text><text x="700" y="823">098</text><text x="770" y="823">099</text><text x="840" y="823">100</text>
+</g>
+<g font-family="Arial,sans-serif" fill="#526777">
+<text x="920" y="250" font-size="23" font-weight="700">Output naming</text>
+<text x="920" y="290" font-size="18">W082W081N031N030-</text><text x="920" y="320" font-size="18">006-Parcels.geojson</text>
+<text x="920" y="390" font-size="23" font-weight="700">Why 100 files?</text>
+<text x="920" y="430" font-size="18">• manageable size</text><text x="920" y="460" font-size="18">• faster field loading</text><text x="920" y="490" font-size="18">• service-limit friendly</text><text x="920" y="520" font-size="18">• durable resume</text>
+</g>
+</svg>
