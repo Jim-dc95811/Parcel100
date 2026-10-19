@@ -1,0 +1,1647 @@
+%PDF-1.4
+%ASCII Parcel100 technical design
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+4 0 obj
+<< /Length 2569 >>
+stream
+0.15 0.25 0.35 RG
+1 w
+54 726 m 558 726 l S
+BT
+/F2 15 Tf
+54 744 Td
+(Parcel100 - GeoJSON Construction Technical Design) Tj
+ET
+BT
+/F1 9.4 Tf
+54 704 Td
+(Purpose: preserve a complete, implementation-level record of how Parcel100 constructs) Tj
+ET
+BT
+/F1 9.4 Tf
+54 691 Td
+(offline parcel GeoJSON files directly from an ArcGIS FeatureServer polygon layer. This) Tj
+ET
+BT
+/F1 9.4 Tf
+54 678 Td
+(document is written for GIS professionals, maintainers, and future reimplementation work.) Tj
+ET
+BT
+/F2 11 Tf
+54 654 Td
+(Design objective) Tj
+ET
+BT
+/F1 9.4 Tf
+54 636 Td
+(Parcel100 turns one deterministic 1 degree by 1 degree Master 4 geographic extent into as) Tj
+ET
+BT
+/F1 9.4 Tf
+54 623 Td
+(many as 100 independently loadable parcel GeoJSON files. The program queries only the parcel) Tj
+ET
+BT
+/F1 9.4 Tf
+54 610 Td
+(records that intersect each 0.1 degree cell, keeps user-selected attributes, converts Esri) Tj
+ET
+BT
+/F1 9.4 Tf
+54 597 Td
+(polygon geometry to standards-based GeoJSON, skips empty cells, and writes portable) Tj
+ET
+BT
+/F1 9.4 Tf
+54 584 Td
+(EPSG:4326 FeatureCollections.) Tj
+ET
+0.2 0.35 0.5 RG
+0.8 w
+54 519 74 32 re S
+BT
+/F2 7.6 Tf
+59 531 Td
+(Master 4) Tj
+ET
+130 535 m 138 535 l S
+134 539 m 138 535 l 134 531 l S
+141 519 74 32 re S
+BT
+/F2 7.6 Tf
+146 531 Td
+(100 cell bounds) Tj
+ET
+217 535 m 225 535 l S
+221 539 m 225 535 l 221 531 l S
+228 519 74 32 re S
+BT
+/F2 7.6 Tf
+233 531 Td
+(ID query) Tj
+ET
+304 535 m 312 535 l S
+308 539 m 312 535 l 308 531 l S
+315 519 74 32 re S
+BT
+/F2 7.6 Tf
+320 531 Td
+(feature batches) Tj
+ET
+391 535 m 399 535 l S
+395 539 m 399 535 l 395 531 l S
+402 519 74 32 re S
+BT
+/F2 7.6 Tf
+407 531 Td
+(ring conversion) Tj
+ET
+478 535 m 486 535 l S
+482 539 m 486 535 l 482 531 l S
+489 519 74 32 re S
+BT
+/F2 7.6 Tf
+494 531 Td
+(GeoJSON file) Tj
+ET
+BT
+/F2 11 Tf
+54 491 Td
+(Core invariants) Tj
+ET
+BT
+/F1 9.4 Tf
+54 473 Td
+(- One Master 4 input always describes exactly one whole-degree west/east/south/north) Tj
+ET
+BT
+/F1 9.4 Tf
+68 460 Td
+(box.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 445 Td
+(- The same Master 4 always produces the same 100 numbered cell extents and filenames.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 430 Td
+(- The source is an ArcGIS FeatureServer polygon layer URL ending in a concrete layer) Tj
+ET
+BT
+/F1 9.4 Tf
+68 417 Td
+(number such as /FeatureServer/0.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 402 Td
+(- GeoJSON output is WGS 84 longitude/latitude \(EPSG:4326\).) Tj
+ET
+BT
+/F1 9.4 Tf
+54 387 Td
+(- Existing completed files are preserved and skipped on resumed runs.) Tj
+ET
+0.6 0.6 0.6 RG
+0.5 w
+54 42 m 558 42 l S
+BT
+/F1 7.5 Tf
+54 28 Td
+(Parcel100 technical record - page 1 of 12) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 1604 >>
+stream
+0.15 0.25 0.35 RG
+1 w
+54 726 m 558 726 l S
+BT
+/F2 15 Tf
+54 744 Td
+(1. Inputs, validation, and Master 4 parsing) Tj
+ET
+BT
+/F2 11 Tf
+54 700 Td
+(User inputs) Tj
+ET
+BT
+/F1 9.4 Tf
+54 682 Td
+(- Master 4: west,east,south,north, for example 82w,81w,30n,31n.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 667 Td
+(- ArcGIS FeatureServer polygon layer URL.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 652 Td
+(- Fields to keep in each GeoJSON.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 637 Td
+(- Output folder and coordinate precision.) Tj
+ET
+BT
+/F2 11 Tf
+54 614 Td
+(Validation) Tj
+ET
+BT
+/F1 9.4 Tf
+54 596 Td
+(Each coordinate token is parsed as an absolute numeric value plus N, S, E, or W. West and) Tj
+ET
+BT
+/F1 9.4 Tf
+54 583 Td
+(south become negative. Longitude is constrained to +/-180 degrees and latitude to +/-90) Tj
+ET
+BT
+/F1 9.4 Tf
+54 570 Td
+(degrees. West must be less than east; south must be less than north. Both spans must be) Tj
+ET
+BT
+/F1 9.4 Tf
+54 557 Td
+(exactly 1 degree and all four edges must fall on whole-degree boundaries.) Tj
+ET
+BT
+/F3 8.3 Tf
+64 537 Td
+(west = -82.0) Tj
+ET
+BT
+/F3 8.3 Tf
+64 526 Td
+(east = -81.0) Tj
+ET
+BT
+/F3 8.3 Tf
+64 515 Td
+(south = 30.0) Tj
+ET
+BT
+/F3 8.3 Tf
+64 504 Td
+(north = 31.0) Tj
+ET
+BT
+/F2 11 Tf
+54 481 Td
+(Canonical label) Tj
+ET
+BT
+/F1 9.4 Tf
+54 463 Td
+(The parsed input is normalized into a deterministic label used later for filenames.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 450 Td
+(Hemisphere prefixes and zero-padded degrees remove ambiguity. Example output prefix:) Tj
+ET
+BT
+/F1 9.4 Tf
+54 437 Td
+(W082W081N031N030.) Tj
+ET
+0.6 0.6 0.6 RG
+0.5 w
+54 42 m 558 42 l S
+BT
+/F1 7.5 Tf
+54 28 Td
+(Parcel100 technical record - page 2 of 12) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 2488 >>
+stream
+0.15 0.25 0.35 RG
+1 w
+54 726 m 558 726 l S
+BT
+/F2 15 Tf
+54 744 Td
+(2. Deterministic 10 x 10 cell construction) Tj
+ET
+BT
+/F1 9.4 Tf
+54 704 Td
+(The one-degree Master 4 is subdivided into 100 equal geographic cells. Every cell is 0.1) Tj
+ET
+BT
+/F1 9.4 Tf
+54 691 Td
+(degree wide by 0.1 degree high. Cell IDs run 001 through 100 using the established Master 4) Tj
+ET
+BT
+/F1 9.4 Tf
+54 678 Td
+(Grid Maker numbering scheme.) Tj
+ET
+0.25 0.25 0.25 RG
+0.5 w
+144.00 458.00 m 144.00 638.00 l S
+144.00 458.00 m 324.00 458.00 l S
+162.00 458.00 m 162.00 638.00 l S
+144.00 476.00 m 324.00 476.00 l S
+180.00 458.00 m 180.00 638.00 l S
+144.00 494.00 m 324.00 494.00 l S
+198.00 458.00 m 198.00 638.00 l S
+144.00 512.00 m 324.00 512.00 l S
+216.00 458.00 m 216.00 638.00 l S
+144.00 530.00 m 324.00 530.00 l S
+234.00 458.00 m 234.00 638.00 l S
+144.00 548.00 m 324.00 548.00 l S
+252.00 458.00 m 252.00 638.00 l S
+144.00 566.00 m 324.00 566.00 l S
+270.00 458.00 m 270.00 638.00 l S
+144.00 584.00 m 324.00 584.00 l S
+288.00 458.00 m 288.00 638.00 l S
+144.00 602.00 m 324.00 602.00 l S
+306.00 458.00 m 306.00 638.00 l S
+144.00 620.00 m 324.00 620.00 l S
+324.00 458.00 m 324.00 638.00 l S
+144.00 638.00 m 324.00 638.00 l S
+BT
+/F2 9 Tf
+349 626 Td
+(Master 4 = 1 degree x 1 degree) Tj
+ET
+BT
+/F1 8.5 Tf
+349 610 Td
+(100 cells = 0.1 degree x 0.1 degree) Tj
+ET
+BT
+/F1 8.5 Tf
+349 594 Td
+(Cell IDs are deterministic: 001-100) Tj
+ET
+BT
+/F2 11 Tf
+54 436 Td
+(Why the split matters) Tj
+ET
+BT
+/F1 9.4 Tf
+54 418 Td
+(Parcel services can contain millions of polygons. Querying a whole Master 4 at once can) Tj
+ET
+BT
+/F1 9.4 Tf
+54 405 Td
+(produce huge responses, exceed service limits, trigger gateway timeouts, or create GeoJSON) Tj
+ET
+BT
+/F1 9.4 Tf
+54 392 Td
+(files that are slow to load on field hardware. The 100-cell architecture turns one massive) Tj
+ET
+BT
+/F1 9.4 Tf
+54 379 Td
+(extraction into predictable, independently usable pieces.) Tj
+ET
+BT
+/F2 11 Tf
+54 355 Td
+(Seam behavior) Tj
+ET
+BT
+/F1 9.4 Tf
+54 337 Td
+(Each cell query uses an ArcGIS envelope with spatial relationship esriSpatialRelIntersects.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 324 Td
+(A parcel touching a cell boundary can therefore be returned by adjacent cells. That) Tj
+ET
+BT
+/F1 9.4 Tf
+54 311 Td
+(duplication is deliberate at file boundaries: it avoids visual gaps when neighboring cell) Tj
+ET
+BT
+/F1 9.4 Tf
+54 298 Td
+(files are loaded independently.) Tj
+ET
+0.6 0.6 0.6 RG
+0.5 w
+54 42 m 558 42 l S
+BT
+/F1 7.5 Tf
+54 28 Td
+(Parcel100 technical record - page 3 of 12) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 1723 >>
+stream
+0.15 0.25 0.35 RG
+1 w
+54 726 m 558 726 l S
+BT
+/F2 15 Tf
+54 744 Td
+(3. FeatureServer introspection and field selection) Tj
+ET
+BT
+/F2 11 Tf
+54 700 Td
+(Read Service) Tj
+ET
+BT
+/F1 9.4 Tf
+54 682 Td
+(Parcel100 first POSTs f=json to the concrete FeatureServer layer URL. The returned metadata) Tj
+ET
+BT
+/F1 9.4 Tf
+54 669 Td
+(is treated as the contract for the extraction. The program verifies that the service reports) Tj
+ET
+BT
+/F1 9.4 Tf
+54 656 Td
+(esriGeometryPolygon, reads the field definitions, layer name, object-ID field, and) Tj
+ET
+BT
+/F1 9.4 Tf
+54 643 Td
+(maxRecordCount.) Tj
+ET
+BT
+/F3 8.3 Tf
+64 623 Td
+(POST <layer-url>) Tj
+ET
+BT
+/F3 8.3 Tf
+64 612 Td
+(  f=json) Tj
+ET
+BT
+/F2 11 Tf
+54 589 Td
+(Field selection) Tj
+ET
+BT
+/F1 9.4 Tf
+54 571 Td
+(The GUI displays service fields using each field name plus alias when present. The output is) Tj
+ET
+BT
+/F1 9.4 Tf
+54 558 Td
+(intentionally attribute-selective: only fields selected by the user are copied into GeoJSON) Tj
+ET
+BT
+/F1 9.4 Tf
+54 545 Td
+(properties. This can reduce file size substantially compared with exporting the full) Tj
+ET
+BT
+/F1 9.4 Tf
+54 532 Td
+(tax-roll schema.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 512 Td
+(- Typical useful Florida fields: PARCEL_ID, OWN_NAME, PHY_ADDR1, PHY_CITY, PHY_ZIPCD.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 497 Td
+(- The recommended-field routine prefers known Florida names and otherwise falls back to) Tj
+ET
+BT
+/F1 9.4 Tf
+68 484 Td
+(generic owner/address/parcel/city/ZIP keywords.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 469 Td
+(- Geometry is never taken from the field list; it is requested separately as feature) Tj
+ET
+BT
+/F1 9.4 Tf
+68 456 Td
+(geometry.) Tj
+ET
+0.6 0.6 0.6 RG
+0.5 w
+54 42 m 558 42 l S
+BT
+/F1 7.5 Tf
+54 28 Td
+(Parcel100 technical record - page 4 of 12) Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 10 0 R >>
+endobj
+12 0 obj
+<< /Length 1851 >>
+stream
+0.15 0.25 0.35 RG
+1 w
+54 726 m 558 726 l S
+BT
+/F2 15 Tf
+54 744 Td
+(4. Per-cell Object ID discovery) Tj
+ET
+BT
+/F1 9.4 Tf
+54 704 Td
+(For each cell, Parcel100 first asks for object IDs only. This keeps the discovery response) Tj
+ET
+BT
+/F1 9.4 Tf
+54 691 Td
+(small and bypasses feature-count limits that affect ordinary feature queries.) Tj
+ET
+BT
+/F3 8.3 Tf
+64 671 Td
+(POST <layer-url>/query) Tj
+ET
+BT
+/F3 8.3 Tf
+64 660 Td
+(  f=json) Tj
+ET
+BT
+/F3 8.3 Tf
+64 649 Td
+(  where=1=1) Tj
+ET
+BT
+/F3 8.3 Tf
+64 638 Td
+(  geometry=<west>,<south>,<east>,<north>) Tj
+ET
+BT
+/F3 8.3 Tf
+64 627 Td
+(  geometryType=esriGeometryEnvelope) Tj
+ET
+BT
+/F3 8.3 Tf
+64 616 Td
+(  inSR=4326) Tj
+ET
+BT
+/F3 8.3 Tf
+64 605 Td
+(  spatialRel=esriSpatialRelIntersects) Tj
+ET
+BT
+/F3 8.3 Tf
+64 594 Td
+(  returnIdsOnly=true) Tj
+ET
+BT
+/F3 8.3 Tf
+64 583 Td
+(  returnGeometry=false) Tj
+ET
+BT
+/F2 11 Tf
+54 560 Td
+(Empty cells) Tj
+ET
+BT
+/F1 9.4 Tf
+54 542 Td
+(If the response contains no objectIds, the cell is marked EMPTY and no file is written. This) Tj
+ET
+BT
+/F1 9.4 Tf
+54 529 Td
+(is important for coastal Master 4s and state-border grids where many of the 100 cells may) Tj
+ET
+BT
+/F1 9.4 Tf
+54 516 Td
+(contain ocean or territory outside the source dataset.) Tj
+ET
+BT
+/F2 11 Tf
+54 492 Td
+(Four-part fallback) Tj
+ET
+BT
+/F1 9.4 Tf
+54 474 Td
+(Version 1.3 hardens this stage. After repeated transient ID-query failures such as HTTP 504) Tj
+ET
+BT
+/F1 9.4 Tf
+54 461 Td
+(Gateway Timeout, the same 0.1 degree cell is divided internally into four smaller envelopes.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 448 Td
+(IDs are collected from all four queries, de-duplicated, and then processed normally. The) Tj
+ET
+BT
+/F1 9.4 Tf
+54 435 Td
+(external file architecture remains one file for the original cell.) Tj
+ET
+0.6 0.6 0.6 RG
+0.5 w
+54 42 m 558 42 l S
+BT
+/F1 7.5 Tf
+54 28 Td
+(Parcel100 technical record - page 5 of 12) Tj
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 12 0 R >>
+endobj
+14 0 obj
+<< /Length 1857 >>
+stream
+0.15 0.25 0.35 RG
+1 w
+54 726 m 558 726 l S
+BT
+/F2 15 Tf
+54 744 Td
+(5. Feature download batching and coordinate system) Tj
+ET
+BT
+/F1 9.4 Tf
+54 704 Td
+(Once object IDs are known, Parcel100 retrieves complete polygon features in batches. The) Tj
+ET
+BT
+/F1 9.4 Tf
+54 691 Td
+(batch size is capped by the layer maxRecordCount and by an internal ceiling of 2,000 IDs.) Tj
+ET
+BT
+/F3 8.3 Tf
+64 671 Td
+(POST <layer-url>/query) Tj
+ET
+BT
+/F3 8.3 Tf
+64 660 Td
+(  f=json) Tj
+ET
+BT
+/F3 8.3 Tf
+64 649 Td
+(  objectIds=101,102,103,...) Tj
+ET
+BT
+/F3 8.3 Tf
+64 638 Td
+(  outFields=<selected fields>) Tj
+ET
+BT
+/F3 8.3 Tf
+64 627 Td
+(  returnGeometry=true) Tj
+ET
+BT
+/F3 8.3 Tf
+64 616 Td
+(  outSR=4326) Tj
+ET
+BT
+/F3 8.3 Tf
+64 605 Td
+(  returnZ=false) Tj
+ET
+BT
+/F3 8.3 Tf
+64 594 Td
+(  returnM=false) Tj
+ET
+BT
+/F3 8.3 Tf
+64 583 Td
+(  geometryPrecision=<user precision>) Tj
+ET
+BT
+/F2 11 Tf
+54 560 Td
+(Why outSR=4326) Tj
+ET
+BT
+/F1 9.4 Tf
+54 542 Td
+(The source layer may use another coordinate reference system. The Florida Statewide) Tj
+ET
+BT
+/F1 9.4 Tf
+54 529 Td
+(Cadastral service, for example, reports NAD83\(2011\) / Florida GDL Albers \(EPSG:6439\).) Tj
+ET
+BT
+/F1 9.4 Tf
+54 516 Td
+(Parcel100 asks the ArcGIS service to return output geometry in WGS 84 \(EPSG:4326\), the) Tj
+ET
+BT
+/F1 9.4 Tf
+54 503 Td
+(coordinate system expected by conventional GeoJSON consumers and handled cleanly by ArcGIS) Tj
+ET
+BT
+/F1 9.4 Tf
+54 490 Td
+(Earth.) Tj
+ET
+BT
+/F2 11 Tf
+54 466 Td
+(Retries) Tj
+ET
+BT
+/F1 9.4 Tf
+54 448 Td
+(Network and service failures are retried with increasing short delays. Version 1.3 also) Tj
+ET
+BT
+/F1 9.4 Tf
+54 435 Td
+(reports retries visibly in the GUI so a slow public service does not appear to be a frozen) Tj
+ET
+BT
+/F1 9.4 Tf
+54 422 Td
+(application.) Tj
+ET
+0.6 0.6 0.6 RG
+0.5 w
+54 42 m 558 42 l S
+BT
+/F1 7.5 Tf
+54 28 Td
+(Parcel100 technical record - page 6 of 12) Tj
+ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 14 0 R >>
+endobj
+16 0 obj
+<< /Length 2014 >>
+stream
+0.15 0.25 0.35 RG
+1 w
+54 726 m 558 726 l S
+BT
+/F2 15 Tf
+54 744 Td
+(6. Esri rings to GeoJSON Polygon / MultiPolygon) Tj
+ET
+BT
+/F1 9.4 Tf
+54 704 Td
+(ArcGIS polygon geometry is returned as one or more rings. GeoJSON requires explicit Polygon) Tj
+ET
+BT
+/F1 9.4 Tf
+54 691 Td
+(or MultiPolygon coordinate nesting. Parcel100 therefore reconstructs topology instead of) Tj
+ET
+BT
+/F1 9.4 Tf
+54 678 Td
+(blindly copying ring arrays.) Tj
+ET
+0.2 0.2 0.2 RG
+1 w
+74 533 120 88 re S
+96 553 76 48 re S
+BT
+/F2 9 Tf
+94 633 Td
+(Esri rings) Tj
+ET
+219 578 m 319 578 l S
+312 583 m 319 578 l 312 573 l S
+BT
+/F1 8 Tf
+224 591 Td
+(close / classify / nest) Tj
+ET
+344 533 120 88 re S
+366 553 76 48 re S
+BT
+/F2 9 Tf
+364 633 Td
+(GeoJSON Polygon) Tj
+ET
+BT
+/F2 11 Tf
+54 504 Td
+(Conversion sequence) Tj
+ET
+BT
+/F1 9.4 Tf
+54 486 Td
+(- Discard malformed points and reduce each point to X/Y; Z and M are not requested.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 471 Td
+(- Close each ring if its last coordinate does not already equal its first coordinate.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 456 Td
+(- Discard degenerate zero-area rings.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 441 Td
+(- Compute signed area magnitude for every ring.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 426 Td
+(- Build a containment tree: for each ring, find the smallest larger ring containing a) Tj
+ET
+BT
+/F1 9.4 Tf
+68 413 Td
+(representative point.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 398 Td
+(- Even containment depth becomes an outer polygon; its immediate odd-depth children) Tj
+ET
+BT
+/F1 9.4 Tf
+68 385 Td
+(become holes.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 370 Td
+(- One reconstructed outer becomes GeoJSON Polygon. Multiple outers become MultiPolygon.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 351 Td
+(This containment approach is intentionally independent of winding direction because) Tj
+ET
+BT
+/F1 9.4 Tf
+54 338 Td
+(real-world services do not always preserve Esri ring orientation consistently after) Tj
+ET
+BT
+/F1 9.4 Tf
+54 325 Td
+(processing or reprojection.) Tj
+ET
+0.6 0.6 0.6 RG
+0.5 w
+54 42 m 558 42 l S
+BT
+/F1 7.5 Tf
+54 28 Td
+(Parcel100 technical record - page 7 of 12) Tj
+ET
+endstream
+endobj
+17 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 16 0 R >>
+endobj
+18 0 obj
+<< /Length 1780 >>
+stream
+0.15 0.25 0.35 RG
+1 w
+54 726 m 558 726 l S
+BT
+/F2 15 Tf
+54 744 Td
+(7. GeoJSON Feature and FeatureCollection assembly) Tj
+ET
+BT
+/F2 11 Tf
+54 700 Td
+(Per-feature structure) Tj
+ET
+BT
+/F1 9.4 Tf
+54 682 Td
+(Each ArcGIS feature becomes one GeoJSON Feature. Properties are rebuilt from only the) Tj
+ET
+BT
+/F1 9.4 Tf
+54 669 Td
+(selected field names. Geometry is the converted Polygon/MultiPolygon object, or null only if) Tj
+ET
+BT
+/F1 9.4 Tf
+54 656 Td
+(the source returned no geometry.) Tj
+ET
+BT
+/F3 8.3 Tf
+64 636 Td
+({) Tj
+ET
+BT
+/F3 8.3 Tf
+64 625 Td
+(  "type": "Feature",) Tj
+ET
+BT
+/F3 8.3 Tf
+64 614 Td
+(  "properties": {"PARCEL_ID": "...", "OWN_NAME": "..."},) Tj
+ET
+BT
+/F3 8.3 Tf
+64 603 Td
+(  "geometry": {"type": "Polygon", "coordinates": [...] }) Tj
+ET
+BT
+/F3 8.3 Tf
+64 592 Td
+(}) Tj
+ET
+BT
+/F2 11 Tf
+54 569 Td
+(Per-cell collection) Tj
+ET
+BT
+/F1 9.4 Tf
+54 551 Td
+(All features for one 0.1 degree cell are written as a compact GeoJSON FeatureCollection.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 538 Td
+(Parcel100 also records useful top-level provenance: the cell bbox, original Master 4 label,) Tj
+ET
+BT
+/F1 9.4 Tf
+54 525 Td
+(numeric cell ID, and source FeatureServer URL.) Tj
+ET
+BT
+/F3 8.3 Tf
+64 505 Td
+({) Tj
+ET
+BT
+/F3 8.3 Tf
+64 494 Td
+(  "type": "FeatureCollection",) Tj
+ET
+BT
+/F3 8.3 Tf
+64 483 Td
+(  "name": "W082W081N031N030-006-Parcels",) Tj
+ET
+BT
+/F3 8.3 Tf
+64 472 Td
+(  "bbox": [west,south,east,north],) Tj
+ET
+BT
+/F3 8.3 Tf
+64 461 Td
+(  "master4": "82W_81W_30N_31N",) Tj
+ET
+BT
+/F3 8.3 Tf
+64 450 Td
+(  "cell": 6,) Tj
+ET
+BT
+/F3 8.3 Tf
+64 439 Td
+(  "source": "https://.../FeatureServer/0",) Tj
+ET
+BT
+/F3 8.3 Tf
+64 428 Td
+(  "features": [...]) Tj
+ET
+BT
+/F3 8.3 Tf
+64 417 Td
+(}) Tj
+ET
+0.6 0.6 0.6 RG
+0.5 w
+54 42 m 558 42 l S
+BT
+/F1 7.5 Tf
+54 28 Td
+(Parcel100 technical record - page 8 of 12) Tj
+ET
+endstream
+endobj
+19 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 18 0 R >>
+endobj
+20 0 obj
+<< /Length 1902 >>
+stream
+0.15 0.25 0.35 RG
+1 w
+54 726 m 558 726 l S
+BT
+/F2 15 Tf
+54 744 Td
+(8. File naming, resume behavior, and data integrity) Tj
+ET
+BT
+/F2 11 Tf
+54 700 Td
+(Filename convention) Tj
+ET
+BT
+/F1 9.4 Tf
+54 682 Td
+(The filename itself is geographic metadata. Example: W082W081N031N030-006-Parcels.geojson.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 669 Td
+(It identifies the Master 4 and the 001-100 cell without opening the file.) Tj
+ET
+BT
+/F2 11 Tf
+54 645 Td
+(Resume behavior) Tj
+ET
+BT
+/F1 9.4 Tf
+54 627 Td
+(Before making any server request for a cell, Parcel100 computes the exact expected output) Tj
+ET
+BT
+/F1 9.4 Tf
+54 614 Td
+(filename and checks the output folder. If that file already exists, the cell is treated as) Tj
+ET
+BT
+/F1 9.4 Tf
+54 601 Td
+(completed and skipped. Existing files are never overwritten automatically.) Tj
+ET
+BT
+/F2 11 Tf
+54 577 Td
+(Why this matters) Tj
+ET
+BT
+/F1 9.4 Tf
+54 559 Td
+(Long public-service extractions can be interrupted by 504 responses, temporary disconnects,) Tj
+ET
+BT
+/F1 9.4 Tf
+54 546 Td
+(sleep events, or application closure. Resume semantics make a partial output folder durable) Tj
+ET
+BT
+/F1 9.4 Tf
+54 533 Td
+(work rather than a failed run. Restarting against the same Master 4 and folder continues at) Tj
+ET
+BT
+/F1 9.4 Tf
+54 520 Td
+(the first missing file.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 500 Td
+(- Empty cells generate no placeholder GeoJSON.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 485 Td
+(- Completed files remain untouched on a resumed build.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 470 Td
+(- The progress bar advances across all 100 logical cells, including existing and empty) Tj
+ET
+BT
+/F1 9.4 Tf
+68 457 Td
+(cells.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 442 Td
+(- Counts distinguish newly written, existing skipped, empty skipped, and parcel records) Tj
+ET
+BT
+/F1 9.4 Tf
+68 429 Td
+(written during the current run.) Tj
+ET
+0.6 0.6 0.6 RG
+0.5 w
+54 42 m 558 42 l S
+BT
+/F1 7.5 Tf
+54 28 Td
+(Parcel100 technical record - page 9 of 12) Tj
+ET
+endstream
+endobj
+21 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 20 0 R >>
+endobj
+22 0 obj
+<< /Length 2198 >>
+stream
+0.15 0.25 0.35 RG
+1 w
+54 726 m 558 726 l S
+BT
+/F2 15 Tf
+54 744 Td
+(9. Operational validation and service behavior) Tj
+ET
+BT
+/F2 11 Tf
+54 700 Td
+(Florida test sources) Tj
+ET
+BT
+/F1 9.4 Tf
+54 682 Td
+(Two public ArcGIS-hosted Florida parcel services were exercised with the same Parcel100) Tj
+ET
+BT
+/F1 9.4 Tf
+54 669 Td
+(workflow. The digitalRE FL_Parcels FeatureServer on services5 behaved as the practical) Tj
+ET
+BT
+/F1 9.4 Tf
+54 656 Td
+(high-throughput source. The Florida Statewide Cadastral FeatureServer on services9 provided) Tj
+ET
+BT
+/F1 9.4 Tf
+54 643 Td
+(official-source lineage but repeatedly exhibited slow responses, 504 Gateway Timeout errors,) Tj
+ET
+BT
+/F1 9.4 Tf
+54 630 Td
+(and occasional generic query failures.) Tj
+ET
+BT
+/F3 8.3 Tf
+64 610 Td
+(services5: https://services5.arcgis.com/GcvM6vDlR2gM4x31/arcgis/rest/services/FL_Parcels/FeatureServer/0) Tj
+ET
+BT
+/F3 8.3 Tf
+64 599 Td
+(services9: https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0) Tj
+ET
+BT
+/F2 11 Tf
+54 576 Td
+(Observed production runs) Tj
+ET
+BT
+/F1 9.4 Tf
+54 558 Td
+(- Grid 3 \(83W,82W,30N,31N\), services5: 63 GeoJSON files, 37 empty cells, 78,837 parcel) Tj
+ET
+BT
+/F1 9.4 Tf
+68 545 Td
+(records; about two minutes for the full 100-cell pass.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 530 Td
+(- Grid 4, services5: 99 GeoJSON files, 1 empty cell, 469,146 parcel records.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 515 Td
+(- Earlier M2 run, services5: 92 files, 8 empty cells, 547,183 records; approximately 314) Tj
+ET
+BT
+/F1 9.4 Tf
+68 502 Td
+(MB total.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 487 Td
+(- services9 cell 022 required the four-part ID fallback and successfully recovered) Tj
+ET
+BT
+/F1 9.4 Tf
+68 474 Td
+(11,969 parcel IDs; later 504 download retries also recovered.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 455 Td
+(Interpretation: the data model and Parcel100 pipeline were not the bottleneck. Identical) Tj
+ET
+BT
+/F1 9.4 Tf
+54 442 Td
+(application logic ran dramatically faster against services5, isolating the operational) Tj
+ET
+BT
+/F1 9.4 Tf
+54 429 Td
+(instability to the services9 delivery path.) Tj
+ET
+0.6 0.6 0.6 RG
+0.5 w
+54 42 m 558 42 l S
+BT
+/F1 7.5 Tf
+54 28 Td
+(Parcel100 technical record - page 10 of 12) Tj
+ET
+endstream
+endobj
+23 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 22 0 R >>
+endobj
+24 0 obj
+<< /Length 2438 >>
+stream
+0.15 0.25 0.35 RG
+1 w
+54 726 m 558 726 l S
+BT
+/F2 15 Tf
+54 744 Td
+(10. End-to-end pseudocode) Tj
+ET
+BT
+/F3 8.3 Tf
+64 704 Td
+(read layer metadata) Tj
+ET
+BT
+/F3 8.3 Tf
+64 693 Td
+(validate polygon geometry) Tj
+ET
+BT
+/F3 8.3 Tf
+64 682 Td
+(read fields and maxRecordCount) Tj
+ET
+BT
+/F3 8.3 Tf
+64 671 Td
+(parse Master 4) Tj
+ET
+BT
+/F3 8.3 Tf
+64 660 Td
+(generate cells 001..100) Tj
+ET
+BT
+/F3 8.3 Tf
+64 649 Td
+() Tj
+ET
+BT
+/F3 8.3 Tf
+64 638 Td
+(for each cell:) Tj
+ET
+BT
+/F3 8.3 Tf
+64 627 Td
+(    path = expected output filename) Tj
+ET
+BT
+/F3 8.3 Tf
+64 616 Td
+(    if path exists:) Tj
+ET
+BT
+/F3 8.3 Tf
+64 605 Td
+(        skip as completed) Tj
+ET
+BT
+/F3 8.3 Tf
+64 594 Td
+(        continue) Tj
+ET
+BT
+/F3 8.3 Tf
+64 583 Td
+() Tj
+ET
+BT
+/F3 8.3 Tf
+64 572 Td
+(    ids = query IDs intersecting cell envelope) Tj
+ET
+BT
+/F3 8.3 Tf
+64 561 Td
+(    if transient failure repeats:) Tj
+ET
+BT
+/F3 8.3 Tf
+64 550 Td
+(        ids = union of four sub-envelope ID queries) Tj
+ET
+BT
+/F3 8.3 Tf
+64 539 Td
+() Tj
+ET
+BT
+/F3 8.3 Tf
+64 528 Td
+(    if ids is empty:) Tj
+ET
+BT
+/F3 8.3 Tf
+64 517 Td
+(        mark EMPTY) Tj
+ET
+BT
+/F3 8.3 Tf
+64 506 Td
+(        continue) Tj
+ET
+BT
+/F3 8.3 Tf
+64 495 Td
+() Tj
+ET
+BT
+/F3 8.3 Tf
+64 484 Td
+(    features = []) Tj
+ET
+BT
+/F3 8.3 Tf
+64 473 Td
+(    for each ID batch:) Tj
+ET
+BT
+/F3 8.3 Tf
+64 462 Td
+(        response = query selected fields + geometry, outSR=4326) Tj
+ET
+BT
+/F3 8.3 Tf
+64 451 Td
+(        for each Esri feature:) Tj
+ET
+BT
+/F3 8.3 Tf
+64 440 Td
+(            geometry = rebuild rings as Polygon/MultiPolygon) Tj
+ET
+BT
+/F3 8.3 Tf
+64 429 Td
+(            properties = selected attributes only) Tj
+ET
+BT
+/F3 8.3 Tf
+64 418 Td
+(            append GeoJSON Feature) Tj
+ET
+BT
+/F3 8.3 Tf
+64 407 Td
+() Tj
+ET
+BT
+/F3 8.3 Tf
+64 396 Td
+(    write compact FeatureCollection atomically to cell filename) Tj
+ET
+BT
+/F2 11 Tf
+54 373 Td
+(Reimplementation warning) Tj
+ET
+BT
+/F1 9.4 Tf
+54 355 Td
+(Do not replace the two-stage ID-then-feature workflow with one giant feature query. The) Tj
+ET
+BT
+/F1 9.4 Tf
+54 342 Td
+(separation is what makes the extraction compatible with large statewide services and) Tj
+ET
+BT
+/F1 9.4 Tf
+54 329 Td
+(maxRecordCount limits. Likewise, do not remove deterministic cell numbering or) Tj
+ET
+BT
+/F1 9.4 Tf
+54 316 Td
+(resume-by-filename without replacing them with an equally explicit durability mechanism.) Tj
+ET
+0.6 0.6 0.6 RG
+0.5 w
+54 42 m 558 42 l S
+BT
+/F1 7.5 Tf
+54 28 Td
+(Parcel100 technical record - page 11 of 12) Tj
+ET
+endstream
+endobj
+25 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 24 0 R >>
+endobj
+26 0 obj
+<< /Length 2386 >>
+stream
+0.15 0.25 0.35 RG
+1 w
+54 726 m 558 726 l S
+BT
+/F2 15 Tf
+54 744 Td
+(11. Maintainer checklist / future implementation notes) Tj
+ET
+BT
+/F2 11 Tf
+54 700 Td
+(Must preserve) Tj
+ET
+BT
+/F1 9.4 Tf
+54 682 Td
+(- Master 4 whole-degree validation and established 001-100 numbering.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 667 Td
+(- FeatureServer layer validation \(polygon geometry\).) Tj
+ET
+BT
+/F1 9.4 Tf
+54 652 Td
+(- ID-only spatial discovery before feature retrieval.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 637 Td
+(- Explicit outSR=4326 for generated GeoJSON.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 622 Td
+(- Selective attributes, not blind full-schema export.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 607 Td
+(- Robust ring closure and containment-based Polygon/MultiPolygon reconstruction.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 592 Td
+(- Empty-cell skipping and deterministic filenames.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 577 Td
+(- Existing-file resume semantics.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 562 Td
+(- Visible retry status and bounded retry behavior.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 547 Td
+(- Four-part fallback for repeatedly failing cell ID queries.) Tj
+ET
+BT
+/F2 11 Tf
+54 524 Td
+(Safe future extensions) Tj
+ET
+BT
+/F1 9.4 Tf
+54 506 Td
+(- Adaptive feature-download batch reduction after repeated 504 responses.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 491 Td
+(- Service presets by state while retaining arbitrary FeatureServer support.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 476 Td
+(- Optional per-cell manifest containing source timestamp, field list, record count, and) Tj
+ET
+BT
+/F1 9.4 Tf
+68 463 Td
+(checksum.) Tj
+ET
+BT
+/F1 9.4 Tf
+54 448 Td
+(- Automated validation that generated GeoJSON loads and identifies correctly in ArcGIS) Tj
+ET
+BT
+/F1 9.4 Tf
+68 435 Td
+(Earth or another standards-compliant viewer.) Tj
+ET
+BT
+/F2 11 Tf
+54 412 Td
+(Design summary) Tj
+ET
+BT
+/F1 9.4 Tf
+54 394 Td
+(Parcel100 is intentionally not a GIS desktop replacement. It is a deterministic extraction) Tj
+ET
+BT
+/F1 9.4 Tf
+54 381 Td
+(and translation engine: geographic cell -> spatial IDs -> selected ArcGIS features ->) Tj
+ET
+BT
+/F1 9.4 Tf
+54 368 Td
+(normalized WGS84 geometry -> portable GeoJSON. The value is the repeatability, manageable) Tj
+ET
+BT
+/F1 9.4 Tf
+54 355 Td
+(file size, offline portability, and the removal of a multi-step expert GIS workflow from the) Tj
+ET
+BT
+/F1 9.4 Tf
+54 342 Td
+(field-map production process.) Tj
+ET
+0.6 0.6 0.6 RG
+0.5 w
+54 42 m 558 42 l S
+BT
+/F1 7.5 Tf
+54 28 Td
+(Parcel100 technical record - page 12 of 12) Tj
+ET
+endstream
+endobj
+27 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 26 0 R >>
+endobj
+28 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R 21 0 R 23 0 R 25 0 R 27 0 R] /Count 12 >>
+endobj
+29 0 obj
+<< /Type /Catalog /Pages 28 0 R >>
+endobj
+xref
+0 30
+0000000000 65535 f 
+0000000043 00000 n 
+0000000113 00000 n 
+0000000188 00000 n 
+0000000256 00000 n 
+0000002876 00000 n 
+0000003023 00000 n 
+0000004678 00000 n 
+0000004825 00000 n 
+0000007364 00000 n 
+0000007511 00000 n 
+0000009286 00000 n 
+0000009435 00000 n 
+0000011338 00000 n 
+0000011487 00000 n 
+0000013396 00000 n 
+0000013545 00000 n 
+0000015611 00000 n 
+0000015760 00000 n 
+0000017592 00000 n 
+0000017741 00000 n 
+0000019695 00000 n 
+0000019844 00000 n 
+0000022094 00000 n 
+0000022243 00000 n 
+0000024733 00000 n 
+0000024882 00000 n 
+0000027320 00000 n 
+0000027469 00000 n 
+0000027603 00000 n 
+trailer
+<< /Size 30 /Root 29 0 R >>
+startxref
+27654
+%%EOF
