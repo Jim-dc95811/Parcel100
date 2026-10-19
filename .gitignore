@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+*.geojson
+*.json
+*.qgz
+*.qgd
+.DS_Store
+Thumbs.db
+Parcel100-output/
