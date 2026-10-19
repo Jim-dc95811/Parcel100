@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="520" viewBox="0 0 1600 520">
+<rect width="1600" height="520" fill="#f7f9fb"/>
+<text x="70" y="78" font-family="Arial,sans-serif" font-size="42" font-weight="700" fill="#15354b">Parcel100 GeoJSON Construction Pipeline</text>
+<text x="70" y="118" font-family="Arial,sans-serif" font-size="22" fill="#526777">Deterministic extraction from an ArcGIS FeatureServer polygon layer</text>
+<g font-family="Arial,sans-serif" text-anchor="middle">
+  <g fill="#ffffff" stroke="#2b6f95" stroke-width="4">
+    <rect x="55" y="205" width="210" height="125" rx="16"/><rect x="310" y="205" width="210" height="125" rx="16"/>
+    <rect x="565" y="205" width="210" height="125" rx="16"/><rect x="820" y="205" width="210" height="125" rx="16"/>
+    <rect x="1075" y="205" width="210" height="125" rx="16"/><rect x="1330" y="205" width="210" height="125" rx="16"/>
+  </g>
+  <g fill="#15354b" font-size="27" font-weight="700">
+    <text x="160" y="252">Master 4</text><text x="415" y="252">100 Cells</text><text x="670" y="252">Object IDs</text>
+    <text x="925" y="252">Feature Batches</text><text x="1180" y="252">Ring Conversion</text><text x="1435" y="252">GeoJSON</text>
+  </g>
+  <g fill="#526777" font-size="18">
+    <text x="160" y="289">1° × 1° input</text><text x="415" y="289">0.1° × 0.1°</text><text x="670" y="289">spatial query</text>
+    <text x="925" y="289">selected fields</text><text x="1180" y="289">Polygon / MultiPolygon</text><text x="1435" y="289">one file per cell</text>
+  </g>
+</g>
+<g stroke="#2b6f95" stroke-width="5" fill="none">
+  <path d="M270 268H302"/><path d="M525 268H557"/><path d="M780 268H812"/><path d="M1035 268H1067"/><path d="M1290 268H1322"/>
+</g>
+<g fill="#2b6f95">
+  <polygon points="302,268 288,260 288,276"/><polygon points="557,268 543,260 543,276"/><polygon points="812,268 798,260 798,276"/>
+  <polygon points="1067,268 1053,260 1053,276"/><polygon points="1322,268 1308,260 1308,276"/>
+</g>
+<text x="70" y="410" font-family="Arial,sans-serif" font-size="21" fill="#526777">EPSG:4326 output • selected attributes only • empty cells skipped • existing files preserved on resume</text>
+<text x="70" y="448" font-family="Arial,sans-serif" font-size="21" fill="#526777">v1.3 resiliency: visible retries + four-part fallback for difficult cell-ID queries</text>
+</svg>
