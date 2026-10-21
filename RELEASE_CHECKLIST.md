@@ -33,7 +33,7 @@ Example:
 ## Field behavior
 
 - User can select only desired fields.
-- Florida **Recommended** still selects:
+- Florida **Recommended** still selects these when present:
 
 ```text
 OWN_NAME
@@ -41,24 +41,38 @@ PHY_ADDR1
 PHY_CITY
 PHY_ZIPCD
 PARCEL_ID
+Acres
 ```
 
 - Custom-service fields are not incorrectly replaced by Florida names.
+- The actual source field name/casing is preserved in GeoJSON properties.
 
-## Empty cells and errors
+## Resume, empty cells and errors
 
+- Expected existing GeoJSON filenames are skipped before server queries.
+- A resumed run does not overwrite completed files automatically.
 - Valid zero-result cells are skipped.
-- No empty GeoJSON file is written for skipped cells.
+- No empty GeoJSON file is written for skipped empty cells.
 - A service/network failure is not misreported as an empty cell.
-- Completion totals accurately report files written and empty cells skipped.
+- Completion totals accurately report files written, existing files skipped, empty cells skipped and parcel records written during the current run.
+
+## Retry and difficult-cell fallback
+
+- Retry status is visible in the GUI.
+- Transient request failures receive up to three attempts.
+- A repeatedly failing transient full-cell ID query triggers four-part fallback.
+- Quarter-query IDs are de-duplicated.
+- Fallback still results in the standard single cell GeoJSON output.
+- A non-transient ID-query failure is not converted into fallback/empty behavior incorrectly.
 
 ## Feature retrieval
 
 - Object-ID query works for populated cells.
-- Feature download batches respect reported service limits.
+- Feature download batches respect reported service limits and the 2,000-record cap.
 - Only selected attributes are requested.
 - `returnZ=false` and `returnM=false` remain in the feature query.
 - Output geometry is requested in EPSG:4326.
+- Feature-download retries remain visible.
 
 ## Geometry
 
@@ -76,7 +90,9 @@ Confirm the GeoJSON opens in a real GIS/viewer and the geometry is visually corr
 - Open at least one current-release GeoJSON in ArcGIS Earth.
 - Confirm parcel geometry lands in the expected location.
 - Click a parcel and verify selected attributes appear in the popup.
+- Confirm `Acres` appears when the Florida Recommended field set is used.
 - Load several neighboring cells together and confirm they coexist cleanly.
+- Capture/update current-release acceptance evidence when useful for the repository.
 
 ## Package
 
@@ -90,20 +106,27 @@ Parcel100/
 ```
 
 - ZIP filename includes the correct release version.
-- README quick-start text matches current behavior.
+- Package README quick-start text matches current behavior.
 - Repository `downloads/` link points to the current package.
+- No older ZIP is presented as the current download.
 
 ## Documentation
 
 Review/update as needed:
 
 - `README.md`
+- `00_USER_MANUALS.md`
 - `USER_MANUAL.md`
 - `TECHNICAL.md`
 - `CHANGELOG.md`
 - `CONTINUITY.md`
+- `FIND_A_PARCEL_SERVICE.md`
 - `LEGAL.md`
+- `CONTRIBUTING.md`
 - `CREDITS.md`
+- `docs/README.md`
+
+Check the repository for stale version numbers or old limitation statements after every release.
 
 ## Public-data caution
 
@@ -112,6 +135,6 @@ Before documenting a new preset/service:
 - confirm the URL is publicly accessible;
 - identify the publisher/source;
 - do not imply ownership of the parcel data;
-- do not bundle downloaded owner records in the repository;
+- do not bundle downloaded owner-record datasets in the repository;
 - avoid claiming survey/legal accuracy;
 - note that source terms and update schedules remain provider-specific.
