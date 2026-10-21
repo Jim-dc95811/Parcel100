@@ -2,7 +2,7 @@
 
 ## Version
 
-Current public source: **Parcel100 1.1**.
+Current public source: **Parcel100 1.4**.
 
 ## Design goal
 
@@ -13,7 +13,10 @@ The production chain is:
 ```text
 Master 4 input
     -> 100 geographic cells
-    -> FeatureServer object-ID query per cell
+    -> resume-skip existing outputs
+    -> FeatureServer object-ID query per unfinished cell
+    -> retry transient failures
+    -> if needed, four-part ID fallback
     -> skip empty cells
     -> batched feature queries for populated cells
     -> Esri polygon rings -> GeoJSON Polygon/MultiPolygon
@@ -91,9 +94,17 @@ The field list shown in the GUI comes from the service metadata, including field
 
 The Florida field suggestions are only preferences for the known statewide layer. Other services are discovered dynamically.
 
+## Resume / existing-file behavior
+
+Before making any server request for a cell, Parcel100 computes the exact expected output filename. If that path already exists, the cell is counted as an existing file and skipped.
+
+This creates simple durable resume behavior for interrupted builds: rerun the same Master 4 against the same output folder and completed cell files are not redownloaded.
+
+Current caution: the program trusts an existing expected filename as complete. It does not validate JSON integrity or a checksum before skipping.
+
 ## Empty-cell probe
 
-Before downloading full feature records, each cell is queried with:
+Each unfinished cell is first queried with:
 
 ```text
 where=1=1
@@ -107,15 +118,59 @@ returnGeometry=false
 
 If the service successfully returns no object IDs, the cell is marked empty and no GeoJSON file is written.
 
-A service/network failure is not treated as empty. The build stops with an error after retries.
+A service/network failure is not treated as empty.
 
 This distinction matters for Master 4 boxes that include ocean, another state, or any area outside the selected parcel service's coverage.
+
+## Retry behavior
+
+Network/service requests use:
+
+```text
+TIMEOUT = 90 seconds
+RETRIES = 3
+```
+
+Between failed attempts Parcel100 waits progressively longer: 1.5 seconds and then 3.0 seconds.
+
+Retry status is surfaced in the GUI during build operations so a slow or unstable service does not simply look frozen.
+
+ArcGIS JSON responses containing an `error` object are surfaced as failures rather than silently accepted.
+
+## Difficult-cell four-part fallback
+
+A full-cell object-ID query can fail repeatedly even when smaller queries against the same service succeed.
+
+Parcel100 1.3/1.4 classifies known transient failure patterns such as:
+
+```text
+502
+503
+504
+Gateway Timeout
+timed out / timeout
+remote end closed connection
+connection reset
+temporarily unavailable
+```
+
+If the normal 0.1-degree ID query exhausts its retries with a transient failure, Parcel100 splits the cell envelope at its longitude and latitude midpoints into four internal quarter envelopes.
+
+Each quarter is queried separately using the same ID-only semantics. Returned IDs are merged into a Python set and sorted, which removes duplicates where a parcel intersects more than one quarter.
+
+The fallback changes only ID discovery. The external output remains the normal single GeoJSON file for the original 0.1-degree cell.
+
+A persistent error in a fallback quarter still stops the build rather than being misreported as an empty cell.
 
 ## Feature retrieval
 
 For populated cells, Parcel100 uses the returned object IDs and requests features in batches.
 
-Batch size is derived from the layer's reported `maxRecordCount`, capped at 2,000 records per request in v1.1.
+Batch size is derived from the layer's reported `maxRecordCount`, capped at 2,000 records per request:
+
+```text
+batch_size = max(1, min(maxRecordCount, 2000))
+```
 
 The feature request includes:
 
@@ -130,6 +185,8 @@ geometryPrecision=<GUI precision>
 ```
 
 This means unnecessary source attributes are never requested in the heavy feature-download pass.
+
+Feature download requests use the same three-attempt retry mechanism. Batch size is not currently reduced adaptively after repeated failures.
 
 ## Output CRS
 
@@ -195,6 +252,14 @@ geometry = Polygon or MultiPolygon
 
 JSON is written without decorative whitespace to reduce file size.
 
+## Current file-write behavior
+
+The current code writes directly to the final deterministic `.geojson` path.
+
+It does **not** currently use a temporary file plus atomic rename. Because resume trusts an existing expected filename, a future hardening option is to validate existing JSON or use temporary-file/rename semantics before considering a cell complete.
+
+Do not describe current v1.4 output as an atomic file write unless that implementation changes.
+
 ## Coordinate precision
 
 GUI range:
@@ -213,24 +278,28 @@ The value is sent to the FeatureServer as `geometryPrecision`.
 
 Higher precision increases coordinate text length and therefore GeoJSON size. The best value depends on the source geometry and intended use.
 
-## Retry behavior
+## Florida Recommended fields
 
-Network/service requests use:
+Current preferred Florida fields are:
 
 ```text
-TIMEOUT = 90 seconds
-RETRIES = 3
+OWN_NAME
+PHY_ADDR1
+PHY_CITY
+PHY_ZIPCD
+PARCEL_ID
+ACRES
 ```
 
-Between failed attempts Parcel100 waits progressively longer.
+Matching is case-insensitive. The Florida service currently exposes the actual field as `Acres`; Parcel100 selects it through the uppercase preference while preserving the actual source field name in the output.
 
-ArcGIS JSON responses containing an `error` object are surfaced as failures rather than silently accepted.
+The preference list is not a schema requirement. Other services are discovered dynamically and the operator remains in control of the final selected fields.
 
 ## Threading
 
 Metadata reads and builds run in a worker thread so the Tk GUI remains responsive enough to update progress/status while network requests are active.
 
-The 100 cells are processed sequentially in v1.1. The program intentionally does not fire 100 simultaneous requests at a public GIS service.
+The 100 cells are processed sequentially. The program intentionally does not fire 100 simultaneous requests at a public GIS service.
 
 ## Output performance rationale
 
@@ -243,29 +312,19 @@ The cell design therefore serves both:
 - server-side query manageability;
 - viewer-side memory/load manageability.
 
-## Florida development service
+## Florida development services
 
-Current built-in preset:
+Preferred current production source:
 
 ```text
 https://services5.arcgis.com/GcvM6vDlR2gM4x31/arcgis/rest/services/FL_Parcels/FeatureServer/0
 ```
 
-Current preferred Florida fields:
-
-```text
-OWN_NAME
-PHY_ADDR1
-PHY_CITY
-PHY_ZIPCD
-PARCEL_ID
-```
-
-These are defaults/preferences, not a requirement of the engine.
+The Florida Statewide Cadastral service on services9 was also tested as an official-source comparison. It repeatedly exhibited slow responses, 504 Gateway Timeout errors and other transient failures. That testing is what drove the retry/fallback hardening.
 
 ## Real-world validation record
 
-Owner-reported production runs during v1.1 development:
+Owner-reported production runs include:
 
 ```text
 Master 4: 82w,81w,30n,31n
@@ -273,6 +332,8 @@ Master 4: 82w,81w,30n,31n
 45 empty cells skipped
 663,277 parcel records written
 ```
+
+Parcel100 1.4 reproduced this run with the new Acres field visible in ArcGIS Earth.
 
 ```text
 Master 4: 82w,81w,29n,30n
@@ -282,19 +343,41 @@ Master 4: 82w,81w,29n,30n
 about 314 MB total
 ```
 
-Multiple output cells were opened together in ArcGIS Earth and parcel features were visually confirmed to draw, align geographically, and expose the selected attributes in the feature popup.
+```text
+Grid 3: 83w,82w,30n,31n
+63 populated files
+37 empty cells skipped
+78,837 parcel records
+about two minutes for the full 100-cell pass
+```
+
+```text
+Grid 4
+99 populated files
+1 empty cell
+469,146 parcel records
+```
+
+```text
+services9 cell 022
+four-part ID fallback recovered 11,969 parcel IDs
+```
+
+Multiple output cells were opened together in ArcGIS Earth and parcel features were visually confirmed to draw, align geographically, and expose selected attributes in the feature popup.
 
 These observations are field results, not universal performance guarantees.
 
 ## Current limitations
 
 - Polygon FeatureServer layers only.
-- Public/reachable services only; no login/token workflow in v1.1.
+- Public/reachable services only; no login/token workflow.
 - No automatic parcel-service discovery by state/county name.
 - No clipping of parcels to cell boundaries.
 - No deduplication across neighboring cell files.
 - No automatic loading/unloading of cells inside ArcGIS Earth.
 - No national parcel data is bundled with the program.
+- Resume trusts an existing expected filename as complete.
+- Feature batch size does not currently shrink after repeated download failures.
 - Source quality, update schedule, allowed uses and field semantics remain the responsibility of the source provider/operator.
 
 ## Preservation rule
@@ -305,7 +388,8 @@ The program's core production behavior should remain deterministic:
 one Master 4 input
 -> same 100 cell addresses
 -> same output naming
--> only populated cells written
+-> completed filenames skipped
+-> only populated unfinished cells written
 ```
 
-Changes that alter cell numbering, naming, or output geometry should be treated as compatibility changes and tested against the Master 4 system before release.
+Changes that alter cell numbering, naming, resume semantics, or output geometry should be treated as compatibility changes and tested against the Master 4 system before release.
