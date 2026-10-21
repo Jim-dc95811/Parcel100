@@ -90,9 +90,14 @@ APN
 PIN
 PARCEL_ID
 PARCELNO
+ACRES
+ACREAGE
+AREA
 ```
 
 Parcel100 shows both the field name and alias reported by the service so you can choose the fields that matter.
+
+The current Florida preset's Recommended selection includes owner name, physical address, city, ZIP, parcel ID and Acres when those fields are present.
 
 ## Statewide vs county-by-county
 
@@ -106,7 +111,7 @@ Possible arrangements include:
 - parcel data published only through downloads instead of a public FeatureServer;
 - public maps whose underlying service requires authentication or has restrictions.
 
-Parcel100 v1.1 works with one public polygon FeatureServer layer at a time.
+Parcel100 v1.4 works with one public polygon FeatureServer layer at a time.
 
 ## Confirm coverage before a large build
 
@@ -117,9 +122,17 @@ A Master 4 can cross:
 - ocean;
 - areas outside the service's jurisdiction.
 
-That is okay. Parcel100 sends a lightweight ID query for each of the 100 cells and skips cells where the selected service returns no parcels.
+That is okay. Parcel100 sends a lightweight ID query for each unfinished one of the 100 cells and skips cells where the selected service returns no parcels.
 
 If a cell intersects the service coverage, only the features exposed by that service are returned.
+
+If a public service is unstable, Parcel100 retries transient failures. A full-cell ID query that repeatedly fails with a recognized transient error can automatically switch to four smaller internal ID-query envelopes without changing the normal one-file-per-cell output.
+
+## Resume behavior
+
+If a long build is interrupted, use the same Master 4 and the same output folder. Parcel100 checks the deterministic expected filename before querying each cell and skips existing outputs.
+
+If you intentionally want to rebuild a cell, delete that cell's GeoJSON first.
 
 ## Do not assume public means unrestricted
 
