@@ -11,7 +11,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
 APP_NAME = "Parcel100"
-VERSION = "1.1"
+VERSION = "1.4"
 FLORIDA_URL = "https://services5.arcgis.com/GcvM6vDlR2gM4x31/arcgis/rest/services/FL_Parcels/FeatureServer/0"
 DEFAULT_MASTER4 = "82w,81w,30n,31n"
 DEFAULT_PRECISION = 7
@@ -26,6 +26,7 @@ FLORIDA_PREFERRED_FIELDS = [
     "PHY_CITY",
     "PHY_ZIPCD",
     "PARCEL_ID",
+    "ACRES",
 ]
 
 
@@ -119,7 +120,7 @@ def output_name(master_label, cell_id):
     return f"{padded_master_label(master_label)}-{cell_id:03d}-Parcels.geojson"
 
 
-def _request(url, params, expect_json=True):
+def _request(url, params, expect_json=True, retry_callback=None):
     data = urllib.parse.urlencode(params).encode("utf-8")
     last_error = None
     for attempt in range(RETRIES):
@@ -147,9 +148,11 @@ def _request(url, params, expect_json=True):
                     msg += " — " + "; ".join(str(x) for x in details)
                 raise RuntimeError(msg)
             return result
-        except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, json.JSONDecodeError, RuntimeError) as exc:
+        except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, ConnectionError, json.JSONDecodeError, RuntimeError) as exc:
             last_error = exc
             if attempt + 1 < RETRIES:
+                if retry_callback is not None:
+                    retry_callback(attempt + 2, RETRIES, exc)
                 time.sleep(1.5 * (attempt + 1))
     raise RuntimeError(str(last_error))
 
@@ -171,7 +174,7 @@ def _query_endpoint(layer_url):
     return layer_url.rstrip("/") + "/query"
 
 
-def query_object_ids(layer_url, bbox):
+def query_object_ids(layer_url, bbox, retry_callback=None):
     w, e, s, n = bbox
     params = {
         "f": "json",
@@ -183,8 +186,74 @@ def query_object_ids(layer_url, bbox):
         "returnIdsOnly": "true",
         "returnGeometry": "false",
     }
-    data = _request(_query_endpoint(layer_url), params)
+    data = _request(_query_endpoint(layer_url), params, retry_callback=retry_callback)
     return data.get("objectIds") or [], data.get("objectIdFieldName")
+
+
+def _is_transient_query_error(exc):
+    text = str(exc).lower()
+    markers = (
+        "504",
+        "502",
+        "503",
+        "gateway timeout",
+        "timed out",
+        "timeout",
+        "remote end closed connection",
+        "connection reset",
+        "temporarily unavailable",
+    )
+    return any(marker in text for marker in markers)
+
+
+def split_bbox_quarters(bbox):
+    w, e, s, n = bbox
+    mid_x = (w + e) / 2.0
+    mid_y = (s + n) / 2.0
+    return [
+        (w, mid_x, s, mid_y),
+        (mid_x, e, s, mid_y),
+        (w, mid_x, mid_y, n),
+        (mid_x, e, mid_y, n),
+    ]
+
+
+def query_object_ids_with_fallback(layer_url, bbox, status_callback=None):
+    def retry_status(prefix):
+        if status_callback is None:
+            return None
+
+        def callback(next_attempt, total_attempts, exc):
+            status_callback(
+                f"{prefix}: request failed ({exc}) - retry {next_attempt} of {total_attempts}..."
+            )
+
+        return callback
+
+    try:
+        return query_object_ids(layer_url, bbox, retry_callback=retry_status("ID query"))
+    except RuntimeError as exc:
+        if not _is_transient_query_error(exc):
+            raise
+        if status_callback is not None:
+            status_callback(f"ID query failed ({exc}) - using 4-part fallback...")
+
+    all_ids = set()
+    object_id_field = None
+    quarters = split_bbox_quarters(bbox)
+    for quarter_number, quarter_bbox in enumerate(quarters, start=1):
+        if status_callback is not None:
+            status_callback(f"4-part fallback: querying quarter {quarter_number} of 4...")
+        ids, oid_field = query_object_ids(
+            layer_url,
+            quarter_bbox,
+            retry_callback=retry_status(f"Fallback quarter {quarter_number}/4"),
+        )
+        all_ids.update(ids)
+        if object_id_field is None and oid_field:
+            object_id_field = oid_field
+
+    return sorted(all_ids), object_id_field
 
 
 def _signed_area(ring):
@@ -291,7 +360,7 @@ def esri_feature_to_geojson(feature, selected_fields):
     return {"type": "Feature", "properties": props, "geometry": geometry}
 
 
-def query_features_json(layer_url, ids, fields, precision, batch_size):
+def query_features_json(layer_url, ids, fields, precision, batch_size, retry_callback=None):
     if not ids:
         return []
     features = []
@@ -308,7 +377,7 @@ def query_features_json(layer_url, ids, fields, precision, batch_size):
             "returnM": "false",
             "geometryPrecision": str(precision),
         }
-        data = _request(endpoint, params)
+        data = _request(endpoint, params, retry_callback=retry_callback)
         for feature in data.get("features") or []:
             features.append(esri_feature_to_geojson(feature, fields))
     return features
@@ -408,7 +477,7 @@ class Parcel100App(tk.Tk):
         ttk.Label(opts, text="Coordinate precision:").pack(side="left")
         self.precision_var = tk.IntVar(value=DEFAULT_PRECISION)
         ttk.Spinbox(opts, from_=5, to=12, width=5, textvariable=self.precision_var).pack(side="left", padx=(6, 18))
-        ttk.Label(opts, text="Up to 100 files; empty cells are skipped (01-100)").pack(side="left")
+        ttk.Label(opts, text="Up to 100 files; existing files and empty cells are skipped (01-100)").pack(side="left")
 
         self.build_btn = ttk.Button(outer, text="BUILD 100 GEOJSON FILES", command=self.build_clicked)
         self.build_btn.grid(row=11, column=0, columnspan=3, sticky="ew", pady=(6, 8), ipady=5)
@@ -519,38 +588,61 @@ class Parcel100App(tk.Tk):
         url = self.url_var.get().strip().rstrip("/")
         total_features = 0
         files_written = 0
+        existing_files = 0
         empty_cells = 0
         try:
             for index, (cell_id, w, e, s, n) in enumerate(cells, start=1):
-                self.after(0, self.status_var.set, f"Cell {cell_id:03d}: finding parcels...")
-                ids, _ = query_object_ids(url, (w, e, s, n))
+                path = out_dir / output_name(label, cell_id)
+                if path.exists():
+                    existing_files += 1
+                    self.after(0, self.status_var.set, f"Cell {cell_id:03d}: existing file - skipped")
+                    self.after(0, self.progress.configure, {"value": index})
+                    continue
+
+                def set_cell_status(text):
+                    self.after(0, self.status_var.set, f"Cell {cell_id:03d}: {text}")
+
+                set_cell_status("finding parcels...")
+                ids, _ = query_object_ids_with_fallback(
+                    url,
+                    (w, e, s, n),
+                    status_callback=set_cell_status,
+                )
                 if not ids:
                     empty_cells += 1
                     self.after(0, self.status_var.set, f"Cell {cell_id:03d}: EMPTY - skipped")
                     self.after(0, self.progress.configure, {"value": index})
                     continue
 
-                self.after(0, self.status_var.set, f"Cell {cell_id:03d}: downloading {len(ids):,} parcels...")
-                features = query_features_json(url, ids, fields, precision, batch_size)
+                set_cell_status(f"downloading {len(ids):,} parcels...")
+
+                def feature_retry_status(next_attempt, total_attempts, exc):
+                    set_cell_status(
+                        f"download request failed ({exc}) - retry {next_attempt} of {total_attempts}..."
+                    )
+
+                features = query_features_json(
+                    url, ids, fields, precision, batch_size, retry_callback=feature_retry_status
+                )
                 total_features += len(features)
-                path = out_dir / output_name(label, cell_id)
                 write_feature_collection(path, features, label, cell_id, (w, e, s, n), url)
                 files_written += 1
                 self.after(0, self.progress.configure, {"value": index})
-            self.after(0, self._build_done, out_dir, total_features, files_written, empty_cells)
+            self.after(0, self._build_done, out_dir, total_features, files_written, existing_files, empty_cells)
         except Exception as exc:
             self.after(0, self._error, f"Build stopped:\n\n{exc}")
 
-    def _build_done(self, out_dir, total_features, files_written, empty_cells):
+    def _build_done(self, out_dir, total_features, files_written, existing_files, empty_cells):
         self.set_busy(False)
         self.status_var.set(
-            f"Complete: {files_written} GeoJSON files, {empty_cells} empty cells skipped, "
-            f"{total_features:,} parcel records written."
+            f"Complete: {files_written} GeoJSON files written, {existing_files} existing files skipped, "
+            f"{empty_cells} empty cells skipped, {total_features:,} parcel records written."
         )
         messagebox.showinfo(
             APP_NAME,
             f"Complete.\n\n{files_written} GeoJSON files written to:\n{out_dir}"
-            f"\n\n{empty_cells} empty cells skipped."
+            f"\n\n{existing_files} existing files skipped."
+            f"\n{empty_cells} empty cells skipped."
         )
 
     def _error(self, message):
