@@ -1,12 +1,24 @@
 # Parcel100 Technical Documentation
 
-This folder contains the technical design record and visual explainers for Parcel100.
+This folder contains the implementation record and visual explainers for Parcel100.
 
-## Technical design
+## Current technical notes
+
+- [Current Parcel100 v1.4 technical notes](../TECHNICAL.md)
+
+These notes reflect the current source, including existing-file resume behavior, visible retries, four-part difficult-cell fallback, the Florida Acres field, and the current non-atomic final-file write behavior.
+
+## Detailed architecture record
 
 - [Parcel100 GeoJSON Construction Technical Design (PDF)](Parcel100_GeoJSON_Construction_Technical_Design.pdf)
 
-The technical design documents the complete construction path from a Master 4 input to the final per-cell GeoJSON files, including FeatureServer metadata discovery, spatial Object ID queries, batching, EPSG:4326 output, Esri ring reconstruction, file naming, resume behavior, retries, the four-part difficult-cell fallback, and observed production behavior of the tested Florida services.
+The PDF is the detailed v1.3 engineering record for the core extraction/conversion architecture. Its retry/resume/fallback design remains relevant to v1.4, but use `TECHNICAL.md` for the current release state and field-selection details.
+
+## Current ArcGIS Earth acceptance evidence
+
+- [Parcel100 1.4 Acres popup](images/parcel100_acres_popup.svg)
+
+This image shows current Parcel100 output in ArcGIS Earth with parcel ID, owner, physical address, city, ZIP and Acres visible as clickable attributes.
 
 ## Diagrams and artwork
 
