@@ -1,0 +1,62 @@
+name: Build Parcel100 package
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - Parcel100.py
+      - Parcel100.bat
+      - PACKAGE_README.txt
+      - .github/workflows/build-package.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build Parcel100 v1.4 ZIP
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import shutil
+          import zipfile
+
+          root = Path('.')
+          stage = root / '.package-stage' / 'Parcel100'
+          if stage.parent.exists():
+              shutil.rmtree(stage.parent)
+          stage.mkdir(parents=True)
+
+          shutil.copy2(root / 'Parcel100.py', stage / 'Parcel100.py')
+          shutil.copy2(root / 'Parcel100.bat', stage / 'Parcel100.bat')
+          shutil.copy2(root / 'PACKAGE_README.txt', stage / 'README.txt')
+
+          downloads = root / 'downloads'
+          downloads.mkdir(exist_ok=True)
+          out = downloads / 'Parcel100_v1.4.zip'
+          if out.exists():
+              out.unlink()
+
+          with zipfile.ZipFile(out, 'w', compression=zipfile.ZIP_DEFLATED) as z:
+              for path in sorted(stage.rglob('*')):
+                  if path.is_file():
+                      z.write(path, path.relative_to(stage.parent))
+          PY
+
+      - name: Commit package if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add downloads/Parcel100_v1.4.zip
+          if git diff --cached --quiet; then
+            echo "Package already current."
+            exit 0
+          fi
+          git commit -m "Build Parcel100 v1.4 download package"
+          git push
