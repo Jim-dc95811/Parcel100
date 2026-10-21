@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.4 - 2026-10-21
+
+- Added `Acres` to the Florida **Recommended** field selection when present.
+- Confirmed ArcGIS Earth popup workflow with the acreage column visible alongside parcel ID, owner name, and physical address fields.
+- Confirmed a full acceptance run producing 55 GeoJSON files, skipping 45 empty cells, and writing 663,277 parcel records.
+
+## 1.3 - 2026-10-19
+
+- Added visible retry status so slow or unstable services do not look like a frozen application.
+- Added four-part difficult-cell fallback for repeated transient full-cell ID-query failures.
+- Quarter-query results are de-duplicated and still produce one normal output GeoJSON for the original cell.
+- Existing resume behavior remains unchanged.
+
+## 1.2 - 2026-10-19
+
+- Added automatic skip/resume behavior for existing GeoJSON output files.
+- Added retry handling for dropped/failed service requests before aborting a build.
+- Existing files are not overwritten automatically.
+
 ## 1.1 - 2026-10-19
 
 - Added empty-cell detection before full feature download.
