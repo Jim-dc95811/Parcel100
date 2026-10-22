@@ -31,3 +31,11 @@ The shared geography allows offline raster imagery and parcel-intelligence cells
 ## Data providers
 
 Parcel data belongs to its respective publishers/providers. The built-in Florida preset points to a public statewide parcel FeatureServer used during development. Parcel100 does not claim ownership of those records.
+
+### Florida parcel-data attribution
+
+The Florida parcel data used for Parcel100 development and demonstration is attributed to:
+
+**Florida's county property appraisers; Florida Department of Revenue Property Tax Oversight.**
+
+Parcel100 provides software for querying and transforming data exposed by the public service. This attribution does not transfer ownership of the parcel data to the Parcel100 project and does not alter the source publisher's terms, update schedule, accuracy limitations or permitted uses.
