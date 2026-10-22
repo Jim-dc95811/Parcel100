@@ -38,6 +38,10 @@ Parcel100 v1.4 includes this public Florida parcel FeatureServer URL as a conven
 https://services5.arcgis.com/GcvM6vDlR2gM4x31/arcgis/rest/services/FL_Parcels/FeatureServer/0
 ```
 
+Florida parcel-data attribution:
+
+**Florida's county property appraisers; Florida Department of Revenue Property Tax Oversight.**
+
 The preset is not a claim of ownership of the data and does not change the publisher's rights, terms, update schedule or responsibilities.
 
 ## Trademarks and independence
