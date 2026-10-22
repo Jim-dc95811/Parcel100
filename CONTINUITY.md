@@ -180,17 +180,31 @@ Do not implement these automatically without explicit project direction, but the
 - load current parcel cell plus surrounding neighbors on demand;
 - public examples for states with different parcel schemas.
 
-## Presentation concept
+## Published demonstration
 
-Parcel100 is strongest when shown as a late reveal in the broader offline-map/Substitute Drone demonstration.
+The finished public demonstration is:
 
-After showing offline multiresolution TPKX imagery, GPS, operational overlays and navigation, the demonstration can simply say:
+**Property Maps From County Property Appraiser Data**
 
-> "Let's just verify who owns the property."
+https://www.youtube.com/watch?v=_hMB_TOODOQ
 
-Then click the local GeoJSON parcel and show the owner/address/acres popup.
+The video deliberately shows the full contrast that justifies Parcel100:
 
-The important message is not that parcel overlays are new. The project value is that public parcel intelligence has been converted into small, deterministic, offline local files that travel with the same geographic system as the offline imagery.
+1. the public parcel/property-appraiser source and its provenance;
+2. the conventional QGIS workflow, including reprojection and the practical burden of producing a large-area parcel product manually;
+3. the point where repeating that process across a large Master 4 becomes operationally unreasonable;
+4. the Parcel100 1.4 workflow using the same public FeatureServer source;
+5. the completed 100-cell-style output strategy and real production counts;
+6. the finished ArcGIS Earth result with clickable owner, address, parcel ID and Acres attributes.
+
+This presentation is important because Parcel100 is not being positioned as a replacement for QGIS. QGIS demonstrates the underlying GIS workflow and remains a powerful general-purpose tool. Parcel100 earns its place by removing the repetitive large-area production burden for this specific field use case.
+
+The key operational message remains:
+
+```text
+TPKX imagery = what the ground looks like
+Parcel100 GeoJSON = what the parcel database knows about the ground
+```
 
 ## Compatibility warning
 
