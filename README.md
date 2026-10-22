@@ -10,6 +10,12 @@ The result is a lightweight offline property-intelligence layer that can ride be
 
 *Parcel100 1.4 field result in ArcGIS Earth: parcel ID, owner, physical address, city, ZIP and Acres remain clickable offline attributes.*
 
+## Video demonstration
+
+**[Property Maps From County Property Appraiser Data](https://www.youtube.com/watch?v=_hMB_TOODOQ)**
+
+The video shows the full problem-and-solution workflow: finding the public parcel source, working through the conventional QGIS process and reprojection steps, seeing why large-area manual production becomes cumbersome, then using Parcel100 to turn the same public parcel service into manageable offline GeoJSON cells for ArcGIS Earth.
+
 ## Download
 
 **[Download Parcel100 v1.4](downloads/Parcel100_v1.4.zip)**
