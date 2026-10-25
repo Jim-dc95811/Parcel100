@@ -11,7 +11,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
 APP_NAME = "Parcel100"
-VERSION = "1.4"
+VERSION = "1.5"
 FLORIDA_URL = "https://services5.arcgis.com/GcvM6vDlR2gM4x31/arcgis/rest/services/FL_Parcels/FeatureServer/0"
 DEFAULT_MASTER4 = "82w,81w,30n,31n"
 DEFAULT_PRECISION = 7
@@ -157,17 +157,56 @@ def _request(url, params, expect_json=True, retry_callback=None):
     raise RuntimeError(str(last_error))
 
 
-def read_service(layer_url):
+def _service_url_parts(url):
+    clean = url.strip().rstrip("/")
+    match = re.fullmatch(r"(.+/(?:FeatureServer|MapServer))(?:/(\d+))?", clean, re.IGNORECASE)
+    if not match:
+        raise ValueError("Paste an ArcGIS FeatureServer or MapServer service or layer URL.")
+    service_url = match.group(1)
+    layer_id = int(match.group(2)) if match.group(2) is not None else None
+    return service_url, layer_id
+
+
+def _read_polygon_layer(layer_url):
     layer_url = layer_url.rstrip("/")
     meta = _request(layer_url, {"f": "json"})
     if meta.get("type") not in ("Feature Layer", None):
-        raise ValueError("URL does not appear to be an ArcGIS FeatureServer layer.")
+        raise ValueError("URL does not appear to be an ArcGIS feature layer.")
     if meta.get("geometryType") != "esriGeometryPolygon":
         raise ValueError(f"Parcel100 requires a polygon layer. Service reports: {meta.get('geometryType')}")
     fields = meta.get("fields") or []
     if not fields:
         raise ValueError("No fields were reported by the service.")
     return meta
+
+
+def discover_polygon_layers(url):
+    service_url, layer_id = _service_url_parts(url)
+    if layer_id is not None:
+        layer_url = f"{service_url}/{layer_id}"
+        return [(layer_url, _read_polygon_layer(layer_url))]
+
+    service_meta = _request(service_url, {"f": "json"})
+    layers = service_meta.get("layers") or []
+    candidates = []
+    for layer in layers:
+        candidate_id = layer.get("id")
+        if candidate_id is None:
+            continue
+        layer_url = f"{service_url}/{candidate_id}"
+        try:
+            meta = _request(layer_url, {"f": "json"})
+        except Exception:
+            continue
+        if meta.get("geometryType") != "esriGeometryPolygon":
+            continue
+        if not (meta.get("fields") or []):
+            continue
+        candidates.append((layer_url, meta))
+
+    if not candidates:
+        raise ValueError("No polygon layers were found in this ArcGIS service.")
+    return candidates
 
 
 def _query_endpoint(layer_url):
@@ -444,7 +483,7 @@ class Parcel100App(tk.Tk):
         ttk.Entry(outer, textvariable=self.master_var).grid(row=1, column=0, columnspan=3, sticky="ew", pady=(2, 8))
         ttk.Label(outer, text="Example: 82w,81w,30n,31n   (west,east,south,north)").grid(row=2, column=0, columnspan=3, sticky="w")
 
-        ttk.Label(outer, text="ArcGIS FeatureServer polygon layer URL", font=("Segoe UI", 10, "bold")).grid(row=3, column=0, sticky="w", pady=(12, 0))
+        ttk.Label(outer, text="ArcGIS FeatureServer / MapServer polygon service or layer URL", font=("Segoe UI", 10, "bold")).grid(row=3, column=0, sticky="w", pady=(12, 0))
         self.url_var = tk.StringVar(value=FLORIDA_URL)
         ttk.Entry(outer, textvariable=self.url_var).grid(row=4, column=0, columnspan=2, sticky="ew", pady=(2, 4))
         self.read_btn = ttk.Button(outer, text="Read Service", command=self.read_service_clicked)
@@ -512,11 +551,77 @@ class Parcel100App(tk.Tk):
 
     def _read_service_worker(self):
         try:
-            meta = read_service(self.url_var.get().strip())
-            fields = [f for f in meta.get("fields", []) if f.get("type") != "esriFieldTypeGeometry"]
-            self.after(0, self._load_fields, meta, fields)
+            candidates = discover_polygon_layers(self.url_var.get().strip())
+            self.after(0, self._handle_polygon_layers, candidates)
         except Exception as exc:
             self.after(0, self._error, f"Could not read service:\n\n{exc}")
+
+    def _handle_polygon_layers(self, candidates):
+        if len(candidates) == 1:
+            layer_url, meta = candidates[0]
+            self._accept_polygon_layer(layer_url, meta)
+            return
+
+        chooser = tk.Toplevel(self)
+        chooser.title("Choose polygon layer")
+        chooser.transient(self)
+
+        ttk.Label(
+            chooser,
+            text="This service contains multiple polygon layers. Choose one:",
+            padding=(12, 12, 12, 6),
+        ).pack(anchor="w")
+
+        frame = ttk.Frame(chooser, padding=(12, 0, 12, 8))
+        frame.pack(fill="both", expand=True)
+        layer_list = tk.Listbox(frame, exportselection=False, height=min(12, len(candidates)), width=70)
+        scroll = ttk.Scrollbar(frame, orient="vertical", command=layer_list.yview)
+        layer_list.configure(yscrollcommand=scroll.set)
+        layer_list.pack(side="left", fill="both", expand=True)
+        scroll.pack(side="right", fill="y")
+
+        for layer_url, meta in candidates:
+            layer_id = layer_url.rsplit("/", 1)[-1]
+            layer_list.insert(tk.END, f"{layer_id}: {meta.get('name', 'Layer')}")
+        layer_list.selection_set(0)
+        layer_list.see(0)
+
+        buttons = ttk.Frame(chooser, padding=(12, 0, 12, 12))
+        buttons.pack(fill="x")
+
+        def use_selected(event=None):
+            selected = layer_list.curselection()
+            if not selected:
+                return
+            layer_url, meta = candidates[selected[0]]
+            try:
+                chooser.grab_release()
+            except tk.TclError:
+                pass
+            chooser.destroy()
+            self._accept_polygon_layer(layer_url, meta)
+
+        def cancel():
+            try:
+                chooser.grab_release()
+            except tk.TclError:
+                pass
+            chooser.destroy()
+            self.set_busy(False)
+            self.status_var.set("Layer selection cancelled.")
+
+        ttk.Button(buttons, text="Use Selected Layer", command=use_selected).pack(side="left")
+        ttk.Button(buttons, text="Cancel", command=cancel).pack(side="right")
+        layer_list.bind("<Double-Button-1>", use_selected)
+        chooser.protocol("WM_DELETE_WINDOW", cancel)
+        chooser.wait_visibility()
+        chooser.grab_set()
+        layer_list.focus_set()
+
+    def _accept_polygon_layer(self, layer_url, meta):
+        self.url_var.set(layer_url)
+        fields = [f for f in meta.get("fields", []) if f.get("type") != "esriFieldTypeGeometry"]
+        self._load_fields(meta, fields)
 
     def _load_fields(self, meta, fields):
         self.meta = meta
