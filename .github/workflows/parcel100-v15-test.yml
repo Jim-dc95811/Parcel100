@@ -21,6 +21,7 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          from textwrap import dedent, indent
 
           path = Path('Parcel100.py')
           text = path.read_text(encoding='utf-8')
@@ -29,22 +30,12 @@ jobs:
           assert old_version in text, 'Expected Parcel100 1.4 version marker not found'
           text = text.replace(old_version, 'VERSION = "1.5"', 1)
 
-          old_read = '''def read_service(layer_url):
-              layer_url = layer_url.rstrip("/")
-              meta = _request(layer_url, {"f": "json"})
-              if meta.get("type") not in ("Feature Layer", None):
-                  raise ValueError("URL does not appear to be an ArcGIS FeatureServer layer.")
-              if meta.get("geometryType") != "esriGeometryPolygon":
-                  raise ValueError(f"Parcel100 requires a polygon layer. Service reports: {meta.get('geometryType')}")
-              fields = meta.get("fields") or []
-              if not fields:
-                  raise ValueError("No fields were reported by the service.")
-              return meta
-          '''.replace('          ', '')
-
-          new_read = '''def _service_url_parts(url):
+          read_start = text.index('def read_service(layer_url):')
+          read_end = text.index('def _query_endpoint(layer_url):', read_start)
+          new_read = dedent(r'''
+          def _service_url_parts(url):
               clean = url.strip().rstrip("/")
-              match = re.fullmatch(r"(.+/(?:FeatureServer|MapServer))(?:/(\\d+))?", clean, re.IGNORECASE)
+              match = re.fullmatch(r"(.+/(?:FeatureServer|MapServer))(?:/(\d+))?", clean, re.IGNORECASE)
               if not match:
                   raise ValueError("Paste an ArcGIS FeatureServer or MapServer service or layer URL.")
               service_url = match.group(1)
@@ -92,10 +83,10 @@ jobs:
               if not candidates:
                   raise ValueError("No polygon layers were found in this ArcGIS service.")
               return candidates
-          '''.replace('          ', '')
 
-          assert old_read in text, 'Expected Parcel100 1.4 read_service block not found'
-          text = text.replace(old_read, new_read, 1)
+
+          ''').lstrip()
+          text = text[:read_start] + new_read + text[read_end:]
 
           old_label = 'ttk.Label(outer, text="ArcGIS FeatureServer polygon layer URL", font=("Segoe UI", 10, "bold")).grid(row=3, column=0, sticky="w", pady=(12, 0))'
           new_label = 'ttk.Label(outer, text="ArcGIS FeatureServer / MapServer polygon service or layer URL", font=("Segoe UI", 10, "bold")).grid(row=3, column=0, sticky="w", pady=(12, 0))'
@@ -104,81 +95,83 @@ jobs:
 
           worker_start = text.index('    def _read_service_worker(self):')
           worker_end = text.index('    def _load_fields(self, meta, fields):', worker_start)
-          new_worker = r'''    def _read_service_worker(self):
+          worker_body = dedent(r'''
+          def _read_service_worker(self):
               try:
                   candidates = discover_polygon_layers(self.url_var.get().strip())
                   self.after(0, self._handle_polygon_layers, candidates)
               except Exception as exc:
                   self.after(0, self._error, f"Could not read service:\n\n{exc}")
 
-              def _handle_polygon_layers(self, candidates):
-                  if len(candidates) == 1:
-                      layer_url, meta = candidates[0]
-                      self._accept_polygon_layer(layer_url, meta)
+          def _handle_polygon_layers(self, candidates):
+              if len(candidates) == 1:
+                  layer_url, meta = candidates[0]
+                  self._accept_polygon_layer(layer_url, meta)
+                  return
+
+              chooser = tk.Toplevel(self)
+              chooser.title("Choose polygon layer")
+              chooser.transient(self)
+
+              ttk.Label(
+                  chooser,
+                  text="This service contains multiple polygon layers. Choose one:",
+                  padding=(12, 12, 12, 6),
+              ).pack(anchor="w")
+
+              frame = ttk.Frame(chooser, padding=(12, 0, 12, 8))
+              frame.pack(fill="both", expand=True)
+              layer_list = tk.Listbox(frame, exportselection=False, height=min(12, len(candidates)), width=70)
+              scroll = ttk.Scrollbar(frame, orient="vertical", command=layer_list.yview)
+              layer_list.configure(yscrollcommand=scroll.set)
+              layer_list.pack(side="left", fill="both", expand=True)
+              scroll.pack(side="right", fill="y")
+
+              for layer_url, meta in candidates:
+                  layer_id = layer_url.rsplit("/", 1)[-1]
+                  layer_list.insert(tk.END, f"{layer_id}: {meta.get('name', 'Layer')}")
+              layer_list.selection_set(0)
+              layer_list.see(0)
+
+              buttons = ttk.Frame(chooser, padding=(12, 0, 12, 12))
+              buttons.pack(fill="x")
+
+              def use_selected(event=None):
+                  selected = layer_list.curselection()
+                  if not selected:
                       return
+                  layer_url, meta = candidates[selected[0]]
+                  try:
+                      chooser.grab_release()
+                  except tk.TclError:
+                      pass
+                  chooser.destroy()
+                  self._accept_polygon_layer(layer_url, meta)
 
-                  chooser = tk.Toplevel(self)
-                  chooser.title("Choose polygon layer")
-                  chooser.transient(self)
+              def cancel():
+                  try:
+                      chooser.grab_release()
+                  except tk.TclError:
+                      pass
+                  chooser.destroy()
+                  self.set_busy(False)
+                  self.status_var.set("Layer selection cancelled.")
 
-                  ttk.Label(
-                      chooser,
-                      text="This service contains multiple polygon layers. Choose one:",
-                      padding=(12, 12, 12, 6),
-                  ).pack(anchor="w")
+              ttk.Button(buttons, text="Use Selected Layer", command=use_selected).pack(side="left")
+              ttk.Button(buttons, text="Cancel", command=cancel).pack(side="right")
+              layer_list.bind("<Double-Button-1>", use_selected)
+              chooser.protocol("WM_DELETE_WINDOW", cancel)
+              chooser.wait_visibility()
+              chooser.grab_set()
+              layer_list.focus_set()
 
-                  frame = ttk.Frame(chooser, padding=(12, 0, 12, 8))
-                  frame.pack(fill="both", expand=True)
-                  layer_list = tk.Listbox(frame, exportselection=False, height=min(12, len(candidates)), width=70)
-                  scroll = ttk.Scrollbar(frame, orient="vertical", command=layer_list.yview)
-                  layer_list.configure(yscrollcommand=scroll.set)
-                  layer_list.pack(side="left", fill="both", expand=True)
-                  scroll.pack(side="right", fill="y")
+          def _accept_polygon_layer(self, layer_url, meta):
+              self.url_var.set(layer_url)
+              fields = [f for f in meta.get("fields", []) if f.get("type") != "esriFieldTypeGeometry"]
+              self._load_fields(meta, fields)
 
-                  for layer_url, meta in candidates:
-                      layer_id = layer_url.rsplit("/", 1)[-1]
-                      layer_list.insert(tk.END, f"{layer_id}: {meta.get('name', 'Layer')}")
-                  layer_list.selection_set(0)
-                  layer_list.see(0)
-
-                  buttons = ttk.Frame(chooser, padding=(12, 0, 12, 12))
-                  buttons.pack(fill="x")
-
-                  def use_selected(event=None):
-                      selected = layer_list.curselection()
-                      if not selected:
-                          return
-                      layer_url, meta = candidates[selected[0]]
-                      try:
-                          chooser.grab_release()
-                      except tk.TclError:
-                          pass
-                      chooser.destroy()
-                      self._accept_polygon_layer(layer_url, meta)
-
-                  def cancel():
-                      try:
-                          chooser.grab_release()
-                      except tk.TclError:
-                          pass
-                      chooser.destroy()
-                      self.set_busy(False)
-                      self.status_var.set("Layer selection cancelled.")
-
-                  ttk.Button(buttons, text="Use Selected Layer", command=use_selected).pack(side="left")
-                  ttk.Button(buttons, text="Cancel", command=cancel).pack(side="right")
-                  layer_list.bind("<Double-Button-1>", use_selected)
-                  chooser.protocol("WM_DELETE_WINDOW", cancel)
-                  chooser.wait_visibility()
-                  chooser.grab_set()
-                  layer_list.focus_set()
-
-              def _accept_polygon_layer(self, layer_url, meta):
-                  self.url_var.set(layer_url)
-                  fields = [f for f in meta.get("fields", []) if f.get("type") != "esriFieldTypeGeometry"]
-                  self._load_fields(meta, fields)
-
-          '''.replace('          ', '    ')
+          ''').lstrip()
+          new_worker = indent(worker_body, '    ')
           text = text[:worker_start] + new_worker + text[worker_end:]
 
           path.write_text(text, encoding='utf-8')
