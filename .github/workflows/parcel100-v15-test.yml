@@ -102,22 +102,14 @@ jobs:
           assert old_label in text, 'Expected URL label not found'
           text = text.replace(old_label, new_label, 1)
 
-          old_worker = '''    def _read_service_worker(self):
-              try:
-                  meta = read_service(self.url_var.get().strip())
-                  fields = [f for f in meta.get("fields", []) if f.get("type") != "esriFieldTypeGeometry"]
-                  self.after(0, self._load_fields, meta, fields)
-              except Exception as exc:
-                  self.after(0, self._error, f"Could not read service:\\n\\n{exc}")
-
-          '''.replace('          ', '    ')
-
-          new_worker = '''    def _read_service_worker(self):
+          worker_start = text.index('    def _read_service_worker(self):')
+          worker_end = text.index('    def _load_fields(self, meta, fields):', worker_start)
+          new_worker = r'''    def _read_service_worker(self):
               try:
                   candidates = discover_polygon_layers(self.url_var.get().strip())
                   self.after(0, self._handle_polygon_layers, candidates)
               except Exception as exc:
-                  self.after(0, self._error, f"Could not read service:\\n\\n{exc}")
+                  self.after(0, self._error, f"Could not read service:\n\n{exc}")
 
               def _handle_polygon_layers(self, candidates):
                   if len(candidates) == 1:
@@ -187,9 +179,7 @@ jobs:
                   self._load_fields(meta, fields)
 
           '''.replace('          ', '    ')
-
-          assert old_worker in text, 'Expected Parcel100 1.4 service worker block not found'
-          text = text.replace(old_worker, new_worker, 1)
+          text = text[:worker_start] + new_worker + text[worker_end:]
 
           path.write_text(text, encoding='utf-8')
           PY
