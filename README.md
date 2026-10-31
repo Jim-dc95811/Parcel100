@@ -5,7 +5,7 @@
 ### **⬇️ [DOWNLOAD PARCEL100 v1.4](downloads/Parcel100_v1.4.zip)**
 Turn one 1-degree Master 4 box into up to 100 small, offline, ArcGIS Earth-ready parcel GeoJSON files.
 
-> **ArcGIS Earth Unlocked:** Parcel100 is the parcel-intelligence component of the broader project family. See the [master system map](https://github.com/Jim-dc95811/Earth-Beacon/blob/main/ARCGIS_EARTH_UNLOCKED.md) and the [ArcGIS Earth Object Factory](https://github.com/Jim-dc95811/Earth-Beacon).
+> **ArcGIS Earth Unlocked:** Parcel100 is the parcel-intelligence component of the broader project family. See the [master system map](https://github.com/Jim-dc95811/Earth-Beacon/blob/main/ARCGIS_EARTH_UNLOCKED.md) and the [ArcGIS Earth Object Factory](https://github.com/Jim-dc95811/ArcGIS-Earth-Object-Factory).
 
 **Turn one 1-degree Master 4 box into up to 100 small, offline, ArcGIS Earth-ready parcel GeoJSON files.**
 
@@ -17,19 +17,31 @@ The result is a lightweight offline property-intelligence layer that can ride be
 
 *Parcel100 1.4 field result in ArcGIS Earth: parcel ID, owner, physical address, city, ZIP and Acres remain clickable offline attributes.*
 
+## Quick start
+
+Windows users can unzip the package and double-click `Parcel100.bat`.
+
+No QGIS project is required for production, and Parcel100 uses only the Python standard library.
+
+1. Install Python 3 on Windows and confirm `py -3 --version` works.
+2. Download and unzip `Parcel100_v1.4.zip`.
+3. Double-click `Parcel100.bat`.
+4. Enter the Master 4 coordinates in **west,east,south,north** order.
+5. Paste the public ArcGIS FeatureServer polygon-layer URL.
+6. Click **Read Service**.
+7. Select the fields you want in the offline GeoJSON. For Florida, **Recommended** selects the lean field set above, including Acres.
+8. Choose an output folder.
+9. Click **BUILD 100 GEOJSON FILES**.
+10. If the build is interrupted, rerun against the same Master 4 and folder; existing completed files are skipped automatically.
+11. Add the resulting `.geojson` files to ArcGIS Earth as local data.
+
+See [USER_MANUAL.md](USER_MANUAL.md) for the operator guide and [TECHNICAL.md](TECHNICAL.md) for the query/geometry details.
+
 ## Video demonstration
 
 **[Property Maps From County Property Appraiser Data](https://www.youtube.com/watch?v=_hMB_TOODOQ)**
 
 The video shows the full problem-and-solution workflow: finding the public parcel source, working through the conventional QGIS process and reprojection steps, seeing why large-area manual production becomes cumbersome, then using Parcel100 to turn the same public parcel service into manageable offline GeoJSON cells for ArcGIS Earth.
-
-## Download
-
-**[Download Parcel100 v1.4](downloads/Parcel100_v1.4.zip)**
-
-Windows users can unzip the package and double-click `Parcel100.bat`.
-
-No QGIS project is required for production, and Parcel100 uses only the Python standard library.
 
 ## What Parcel100 does
 
@@ -125,22 +137,6 @@ These are owner-reported real-world runs against the Florida statewide parcel se
 Individual 0.1-degree Florida test cells were observed from a few MB into the tens of MB depending on parcel density. Multiple cells were loaded together successfully in ArcGIS Earth, with parcel polygons drawing and selected owner/address/acres fields opening from the feature popup.
 
 The v1.4 acceptance run shown above produced **55 GeoJSON files, skipped 45 empty cells, and wrote 663,277 parcel records** with the new Acres field working in ArcGIS Earth.
-
-## Quick start
-
-1. Install Python 3 on Windows and confirm `py -3 --version` works.
-2. Download and unzip `Parcel100_v1.4.zip`.
-3. Double-click `Parcel100.bat`.
-4. Enter the Master 4 coordinates in **west,east,south,north** order.
-5. Paste the public ArcGIS FeatureServer polygon-layer URL.
-6. Click **Read Service**.
-7. Select the fields you want in the offline GeoJSON. For Florida, **Recommended** selects the lean field set above, including Acres.
-8. Choose an output folder.
-9. Click **BUILD 100 GEOJSON FILES**.
-10. If the build is interrupted, rerun against the same Master 4 and folder; existing completed files are skipped automatically.
-11. Add the resulting `.geojson` files to ArcGIS Earth as local data.
-
-See [USER_MANUAL.md](USER_MANUAL.md) for the operator guide and [TECHNICAL.md](TECHNICAL.md) for the query/geometry details.
 
 ## Current scope
 
