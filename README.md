@@ -29,7 +29,7 @@ No QGIS project is required for production, and Parcel100 uses only the Python s
 4. Enter the Master 4 coordinates in **west,east,south,north** order.
 5. Paste the public ArcGIS FeatureServer polygon-layer URL.
 6. Click **Read Service**.
-7. Select the fields you want in the offline GeoJSON. For Florida, **Recommended** selects the lean field set above, including Acres.
+7. Select the fields you want in the offline GeoJSON. For Florida, **Recommended** selects the lean field set listed under **Florida preset** below, including Acres.
 8. Choose an output folder.
 9. Click **BUILD 100 GEOJSON FILES**.
 10. If the build is interrupted, rerun against the same Master 4 and folder; existing completed files are skipped automatically.
@@ -131,8 +131,10 @@ These are owner-reported real-world runs against the Florida statewide parcel se
 | --- | ---: | ---: | ---: | ---: |
 | `82w,81w,30n,31n` | 55 | 45 | 663,277 | — |
 | `82w,81w,29n,30n` | 92 | 8 | 547,183 | about 314 MB |
-| `83w,82w,30n,31n` | 63 | 37 | 78,837 | about two minutes for the full 100-cell pass |
+| `83w,82w,30n,31n` | 63 | 37 | 78,837 | — |
 | `Grid 4` | 99 | 1 | 469,146 | — |
+
+The `83w,82w,30n,31n` run completed its full 100-cell pass in about two minutes.
 
 Individual 0.1-degree Florida test cells were observed from a few MB into the tens of MB depending on parcel density. Multiple cells were loaded together successfully in ArcGIS Earth, with parcel polygons drawing and selected owner/address/acres fields opening from the feature popup.
 
@@ -178,6 +180,7 @@ The two remain separate layers, so parcel boundaries and attributes stay clickab
 
 - [USER_MANUAL.md](USER_MANUAL.md) - current v1.4 step-by-step operator manual.
 - [FIND_A_PARCEL_SERVICE.md](FIND_A_PARCEL_SERVICE.md) - how to locate the real FeatureServer behind a public parcel map.
+- [docs/](docs/README.md) - GeoJSON construction technical design PDF (v1.3 engineering record) and project diagrams.
 - [TECHNICAL.md](TECHNICAL.md) - current v1.4 service queries, resilience, cell logic, geometry conversion and output behavior.
 - [CONTINUITY.md](CONTINUITY.md) - current project handoff and proven field state.
 - [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) - public-release/regression checklist.

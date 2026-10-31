@@ -2,7 +2,7 @@
 
 ## Supported version
 
-The current supported public version is Parcel100 1.1.
+The current supported public version is Parcel100 1.4.
 
 ## Reporting
 
