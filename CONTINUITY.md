@@ -2,6 +2,8 @@
 
 ## Current state
 
+**2026-11-01 update:** the front page follows the family-wide layout (download link, user manual link, one line, screenshot that opens the video). Screenshot `images/parcel100_popup_arcgis_earth.jpg` opens video `_hMB_TOODOQ`. `USER_MANUAL.md` was corrected against the 1.5 code; `Parcel100_User_Manual.pdf` (previously v1.1) is generated from it. A corrupt SVG was removed from `docs/images/`.
+
 Parcel100 1.5 is a working Windows GUI tool that converts one 1-degree Master 4 input into up to 100 small offline parcel GeoJSON files for ArcGIS Earth.
 
 1.5 (2026-11-01, live-accepted by Jim) added service-root discovery with a polygon-layer chooser and hardening: `.partial` writes, incomplete-cell rebuild on resume, per-parcel completeness check with write-and-warn, timed-out batch splitting, and a URL-changed check. Normal output is byte-identical to 1.4. See `docs/PARCEL100_V1.5_CHANGES.md`.
