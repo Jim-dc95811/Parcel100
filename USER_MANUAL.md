@@ -1,22 +1,27 @@
-# Parcel100 User Manual
+# Parcel100 1.5 User Manual
+
+A printable copy of this manual is available as [Parcel100_User_Manual.pdf](Parcel100_User_Manual.pdf).
 
 ## Purpose
 
 Parcel100 creates up to 100 small offline parcel GeoJSON files from one Master 4 1-degree box. The files are designed for direct use in ArcGIS Earth as clickable vector layers with selected parcel attributes preserved.
 
-The program is intended to hide the repetitive GIS/server work from the operator. You provide a geographic Master 4 box and a public ArcGIS FeatureServer polygon layer; Parcel100 does the cell-by-cell querying and GeoJSON production.
+The program is intended to hide the repetitive GIS/server work from the operator. You provide a geographic Master 4 box and a public ArcGIS parcel service; Parcel100 does the cell-by-cell querying and GeoJSON production.
 
 ## Requirements
 
 - Windows 10/11
 - Python 3 available through the Windows `py` launcher
 - Internet access while building GeoJSON files
-- A public ArcGIS FeatureServer polygon-layer URL
+- A public ArcGIS FeatureServer or MapServer parcel service (the service itself or its polygon layer). [FIND_A_PARCEL_SERVICE.md](FIND_A_PARCEL_SERVICE.md) explains how to find one.
 - ArcGIS Earth for the intended viewing workflow
 
 No QGIS installation is required for production and no third-party Python packages are required.
 
 ## Start Parcel100
+
+1. Download [`Parcel100_v1.5.zip`](downloads/Parcel100_v1.5.zip) and unzip it. It contains a `Parcel100` folder.
+2. Install Python 3 from python.org if it is not already installed. In a Command Prompt, `py -3 --version` should print a version number.
 
 Keep these two files in the same folder:
 
@@ -51,7 +56,7 @@ The box must be exactly 1 degree wide and 1 degree tall.
 
 Parcel100 subdivides the box into the established 100 Master 4 cells, each approximately 0.1 degree by 0.1 degree in geographic coordinates.
 
-## 2. Enter the FeatureServer layer URL
+## 2. Enter the parcel service URL
 
 You can paste the service itself, ending in `/FeatureServer` or `/MapServer`; Parcel100 1.5 finds its polygon layers when you click Read Service. Or point directly to a polygon layer, normally ending in:
 
@@ -67,9 +72,9 @@ Florida preset:
 https://services5.arcgis.com/GcvM6vDlR2gM4x31/arcgis/rest/services/FL_Parcels/FeatureServer/0
 ```
 
-For another state or county, paste that jurisdiction's public parcel FeatureServer layer URL instead.
+For another state or county, paste that jurisdiction's public parcel service or layer URL instead. See [FIND_A_PARCEL_SERVICE.md](FIND_A_PARCEL_SERVICE.md).
 
-A web-map URL is not the same thing as the FeatureServer layer URL. Parcel100 needs the data layer itself.
+A web-map or web-app URL is not the same thing as the service URL. Parcel100 needs the ArcGIS REST service (`.../rest/services/.../FeatureServer` or `.../MapServer`).
 
 ## 3. Click Read Service
 
@@ -79,9 +84,9 @@ Click:
 Read Service
 ```
 
-Parcel100 reads the layer metadata and populates the field list.
+Parcel100 reads the layer metadata and populates the field list. If the service has only one polygon layer, it is used automatically.
 
-If you pasted a service root, Parcel100 checks each layer (the status line shows `Checking layer N of M`). When there is more than one polygon layer, choose the parcel layer from the list. Layers that did not respond are listed in orange; if the parcel layer might be one of them, click Cancel and try again later, or paste that layer's own URL.
+If you pasted a service root, Parcel100 checks each layer (the status line shows `Checking layer N of M`). When there is more than one polygon layer, choose the parcel layer from the list and click **Use Selected Layer**. Layers that did not respond are listed in orange; if the parcel layer might be one of them, click Cancel and try again later, or paste that layer's own URL.
 
 If you change the URL after Read Service, click Read Service again before building. Parcel100 will remind you.
 
@@ -108,7 +113,7 @@ PARCEL_ID
 Acres
 ```
 
-Click **Recommended** to select those fields when they exist.
+Click **Recommended** to select those fields when they exist. **Select All** and **Clear** select or clear the whole list. Hold Ctrl and click to add or remove single fields.
 
 Other jurisdictions use different names, so inspect the aliases shown beside each field and select what is useful for your purpose.
 
@@ -156,7 +161,7 @@ BUILD 100 GEOJSON FILES
 
 Parcel100 processes the Master 4 cells in order.
 
-Before making any server request for a cell, Parcel100 computes the exact expected output filename. If that file already exists in the output folder, the cell is treated as completed and skipped. This is the current resume behavior.
+Before making any server request for a cell, Parcel100 computes the exact expected output filename. If a complete file with that name already exists in the output folder, the cell is skipped (see **Resume an interrupted build** below).
 
 For each unfinished cell it first asks the service only for matching object IDs. If there are no matching parcel IDs, the cell is marked empty and skipped.
 
@@ -164,7 +169,9 @@ A successful empty-cell result is different from a server failure. A network/ser
 
 If a normal 0.1-degree object-ID query repeatedly fails with a transient error such as a timeout, 502/503/504, remote-end-close, or connection reset, Parcel100 automatically divides that cell into four smaller internal query envelopes. It queries each quarter, de-duplicates the IDs, and then continues the normal feature download for the original cell.
 
-For populated cells, Parcel100 downloads the parcel features in service-sized batches and writes one GeoJSON file.
+For populated cells, Parcel100 downloads the parcel features in service-sized batches and writes one GeoJSON file. It checks every parcel ID off as the features arrive and asks the service once more for any that are missing.
+
+The status line shows which cell is being worked on, and the progress bar fills as cells finish.
 
 ## Output naming
 
@@ -262,8 +269,8 @@ Parcel100 is not limited to Florida.
 
 To try another jurisdiction:
 
-1. Find a public ArcGIS parcel FeatureServer polygon layer.
-2. Paste the layer URL into Parcel100.
+1. Find a public ArcGIS parcel service ([FIND_A_PARCEL_SERVICE.md](FIND_A_PARCEL_SERVICE.md)).
+2. Paste the service or layer URL into Parcel100.
 3. Click **Read Service**.
 4. Select that jurisdiction's owner/address/parcel/acres fields.
 5. Enter a Master 4 covering the desired area.
@@ -275,7 +282,7 @@ Coverage and schema vary widely. Some states publish statewide parcel layers; ot
 
 ### Read Service fails
 
-Check the URL in a browser. It should resolve to an ArcGIS REST layer page and report polygon geometry.
+Check the URL in a browser. It should open an ArcGIS REST page for the service or layer; a parcel layer reports `Geometry Type: esriGeometryPolygon`. If Parcel100 says it requires a polygon layer, the URL points to a point or line layer; use the parcel layer instead. If it lists layers that did not respond, try again later or paste the parcel layer's own URL.
 
 ### Build pauses and shows retry text
 
@@ -288,6 +295,10 @@ A persistent service or connectivity problem is treated as an error. Re-run afte
 ### ArcGIS Earth shows nothing
 
 Confirm the GeoJSON was produced by Parcel100 and that the view is near the Master 4 area. Parcel100 requests output geometry in EPSG:4326 / WGS 84.
+
+### Warning that some parcels were not returned
+
+The service skipped some parcels even after Parcel100 asked a second time. The listed cells were written without them. Delete those cell files and build again later to retry them.
 
 ### Popup has too much information
 

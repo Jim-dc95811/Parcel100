@@ -17,9 +17,9 @@ The PDF is the detailed v1.3 engineering record for the core extraction/conversi
 
 ## Current ArcGIS Earth acceptance evidence
 
-- [Parcel100 1.4 Acres popup](images/parcel100_acres_popup.svg)
+- [Parcel100 popup in ArcGIS Earth](../images/parcel100_popup_arcgis_earth.jpg)
 
-This image shows current Parcel100 output in ArcGIS Earth with parcel ID, owner, physical address, city, ZIP and Acres visible as clickable attributes.
+This screenshot shows Parcel100 output in ArcGIS Earth with parcel ID, owner, physical address, city, ZIP and Acres visible as clickable attributes.
 
 ## Diagrams and artwork
 
