@@ -3,6 +3,8 @@
 ## Download the tool
 
 ### **⬇️ [DOWNLOAD PARCEL100 v1.5](downloads/Parcel100_v1.5.zip)**
+**📖 [User manual](USER_MANUAL.md)**
+
 Turn one 1-degree Master 4 box into up to 100 small, offline, ArcGIS Earth-ready parcel GeoJSON files.
 
 > **ArcGIS Earth Unlocked:** Parcel100 is the parcel-intelligence component of the broader project family. See the [master system map](https://github.com/Jim-dc95811/ArcGIS-Earth-Unlocked) and the [ArcGIS Earth Object Factory](https://github.com/Jim-dc95811/ArcGIS-Earth-Object-Factory).
