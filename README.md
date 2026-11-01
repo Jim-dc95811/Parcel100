@@ -7,6 +7,10 @@
 
 Turn one 1-degree Master 4 box into up to 100 small, offline, ArcGIS Earth-ready parcel GeoJSON files.
 
+[![Parcel100 parcels in ArcGIS Earth: clicking a parcel shows its ID, owner, address, city, ZIP and acres](images/parcel100_popup_arcgis_earth.jpg)](https://www.youtube.com/watch?v=_hMB_TOODOQ)
+
+*Click any parcel in ArcGIS Earth to see its owner, address and acres, offline. ▶️ [Watch the video](https://www.youtube.com/watch?v=_hMB_TOODOQ) (YouTube).*
+
 > **ArcGIS Earth Unlocked:** Parcel100 is the parcel-intelligence component of the broader project family. See the [master system map](https://github.com/Jim-dc95811/ArcGIS-Earth-Unlocked) and the [ArcGIS Earth Object Factory](https://github.com/Jim-dc95811/ArcGIS-Earth-Object-Factory).
 
 **Turn one 1-degree Master 4 box into up to 100 small, offline, ArcGIS Earth-ready parcel GeoJSON files.**
@@ -14,10 +18,6 @@ Turn one 1-degree Master 4 box into up to 100 small, offline, ArcGIS Earth-ready
 Parcel100 reads a public ArcGIS FeatureServer polygon layer, lets the operator choose only the fields worth carrying into the field, spatially queries the service one 0.1-degree cell at a time, skips empty cells, converts the returned parcel geometry to WGS 84 GeoJSON, and writes deterministic files that open directly in ArcGIS Earth.
 
 The result is a lightweight offline property-intelligence layer that can ride beside TPKX imagery instead of being burned into it. The imagery answers **what does the ground look like?** Parcel100 adds **who owns this ground, what is the property address, and how many acres are involved?**
-
-![Parcel100 1.4 Acres field in ArcGIS Earth](docs/images/parcel100_acres_popup.svg)
-
-*Parcel100 1.4 field result in ArcGIS Earth: parcel ID, owner, physical address, city, ZIP and Acres remain clickable offline attributes.*
 
 ## Quick start
 
