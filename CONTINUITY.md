@@ -2,7 +2,9 @@
 
 ## Current state
 
-Parcel100 1.4 is a working Windows GUI tool that converts one 1-degree Master 4 input into up to 100 small offline parcel GeoJSON files for ArcGIS Earth.
+Parcel100 1.5 is a working Windows GUI tool that converts one 1-degree Master 4 input into up to 100 small offline parcel GeoJSON files for ArcGIS Earth.
+
+1.5 (2026-11-01, live-accepted by Jim) added service-root discovery with a polygon-layer chooser and hardening: `.partial` writes, incomplete-cell rebuild on resume, per-parcel completeness check with write-and-warn, timed-out batch splitting, and a URL-changed check. Normal output is byte-identical to 1.4. See `docs/PARCEL100_V1.5_CHANGES.md`.
 
 The current production path is proven against the Florida statewide parcel FeatureServer and has been accepted in ArcGIS Earth with the new Acres field visible in the parcel popup.
 
@@ -13,7 +15,7 @@ Main files:
 ```text
 Parcel100.py
 Parcel100.bat
-downloads/Parcel100_v1.4.zip
+downloads/Parcel100_v1.5.zip   (previous: downloads/Parcel100_v1.4.zip, kept for existing links)
 ```
 
 The program uses only the Python standard library.
@@ -26,7 +28,7 @@ Master 4 input
 -> operator selects fields
 -> split Master 4 into cells 001-100
 -> compute deterministic output filename
--> skip existing completed files
+-> skip existing complete files (rebuild incomplete ones)
 -> lightweight ID query per unfinished cell
 -> retry transient failures
 -> if needed, split a difficult cell into four internal ID-query boxes
@@ -124,11 +126,11 @@ The Florida Statewide Cadastral service on services9 repeatedly produced transie
 
 Resume is a current production feature.
 
-Before making a server request for a cell, Parcel100 computes the exact expected filename. If that file already exists in the output folder, the cell is counted as existing and skipped.
+Before making a server request for a cell, Parcel100 computes the exact expected filename. If that file already exists in the output folder and is complete GeoJSON, the cell is counted as existing and skipped; an incomplete file is rebuilt (1.5).
 
 This means an interrupted run can be restarted against the same Master 4 and folder without redownloading completed cells.
 
-Current caution: the resume rule trusts an existing expected filename as complete. It does not validate the JSON or checksum the file before skipping it.
+Since 1.5, cells are written as `.partial` and renamed when complete, so an interruption cannot leave a half-written cell. The resume check is structural; it does not compare parcel counts with the service.
 
 ## Why 100 cells
 
@@ -164,8 +166,7 @@ The **Recommended** selection is exact for known Florida fields first, then uses
 - no automatic ArcGIS Earth cell loading from GPS yet;
 - no built-in state profiles beyond the Florida URL/field preference;
 - service terms/field meanings/data quality vary by provider;
-- resume trusts an existing expected filename as complete;
-- feature download retries do not yet adaptively reduce the service-advertised batch size after repeated failures.
+- resume checks a cell file's structure, not its parcel count against the service.
 
 ## Strong future extensions
 
@@ -173,9 +174,7 @@ Do not implement these automatically without explicit project direction, but the
 
 - source profiles for known state/county parcel services;
 - save/load selected-field profiles;
-- optional validation of existing GeoJSON before resume-skip;
 - optional checksum or manifest per Master 4;
-- adaptive feature-download batch reduction after repeated 504 responses;
 - integration with a future Substitute Drone launcher so GPS determines the current Master 4 cell and loads the matching parcel GeoJSON;
 - load current parcel cell plus surrounding neighbors on demand;
 - public examples for states with different parcel schemas.

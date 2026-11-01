@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5 - 2026-11-01
+
+Discovery and hardening release; normal output is byte-identical to 1.4. Details: [docs/PARCEL100_V1.5_CHANGES.md](docs/PARCEL100_V1.5_CHANGES.md).
+
+- Paste a FeatureServer/MapServer service root or a layer URL; several polygon layers bring up a chooser.
+- Discovery shows its progress, lists layers that did not respond, and accepts URLs ending in `/query`.
+- Cells are written as `.partial` and renamed when complete; on resume an incomplete existing cell is rebuilt.
+- Every parcel ID is checked; missing parcels are asked for once more and any still missing are reported per cell (write and warn).
+- A download batch that keeps timing out is split in half and retried.
+- The build uses the layer that was read; changing the URL afterwards asks for Read Service again.
+
 ## 1.4 - 2026-10-21
 
 - Added `Acres` to the Florida **Recommended** field selection when present.

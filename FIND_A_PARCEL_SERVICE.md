@@ -111,7 +111,7 @@ Possible arrangements include:
 - parcel data published only through downloads instead of a public FeatureServer;
 - public maps whose underlying service requires authentication or has restrictions.
 
-Parcel100 v1.4 works with one public polygon FeatureServer layer at a time.
+Parcel100 v1.5 works with one public polygon layer at a time. You can paste the service itself (ending in `/FeatureServer` or `/MapServer`) and choose the parcel layer from the list, or paste the layer URL directly.
 
 ## Confirm coverage before a large build
 

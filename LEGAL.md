@@ -32,7 +32,7 @@ Parcel100 output can be useful for situational awareness, planning and field ref
 
 ## Florida preset
 
-Parcel100 v1.4 includes this public Florida parcel FeatureServer URL as a convenience preset:
+Parcel100 v1.5 includes this public Florida parcel FeatureServer URL as a convenience preset:
 
 ```text
 https://services5.arcgis.com/GcvM6vDlR2gM4x31/arcgis/rest/services/FL_Parcels/FeatureServer/0

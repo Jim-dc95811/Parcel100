@@ -1,4 +1,4 @@
-Parcel100 1.4
+Parcel100 1.5
 
 Purpose
 -------
@@ -12,8 +12,10 @@ Quick start
 -----------
 1. Run Parcel100.bat.
 2. Enter Master 4 coordinates, for example: 82w,81w,30n,31n
-3. Paste a public ArcGIS FeatureServer polygon layer URL ending in /FeatureServer/<layer id>.
-4. Click Read Service.
+3. Paste a public ArcGIS FeatureServer or MapServer URL: either the service itself
+   (ending in /FeatureServer or /MapServer) or one layer (ending in /<layer id>).
+4. Click Read Service. If the service has several polygon layers, choose the parcel layer.
+   If some layers did not respond, they are listed so you can try again later.
 5. Select only the fields you want carried into ArcGIS Earth.
 6. Choose an output folder.
 7. Click BUILD 100 GEOJSON FILES.
@@ -45,8 +47,12 @@ Each file is WGS 84 / EPSG:4326 GeoJSON for direct use in ArcGIS Earth.
 
 Resume / retry
 --------------
-- Existing expected GeoJSON output files are skipped automatically. Restart an interrupted build with the same Master 4 and output folder to continue from missing cells.
+- Existing complete GeoJSON output files are skipped automatically. Restart an interrupted build with the same Master 4 and output folder to continue from missing cells.
+- Each cell is written as a .partial file and renamed only when complete. An existing cell file that is not complete GeoJSON (for example, left by an interrupted older version) is rebuilt.
+- If you change the URL after Read Service, click Read Service again before building.
 - Dropped or transient service requests are retried up to 3 times before the build stops.
+- A download batch that keeps timing out is split in half and retried, down to single parcels.
+- Every parcel ID is checked off. Parcels the service did not return are asked for once more; any still missing are listed per cell in a warning at the end (those cells are still written).
 - Existing files are never overwritten automatically. Delete a cell file first if you intentionally want Parcel100 to rebuild it.
 
 Difficult-cell fallback

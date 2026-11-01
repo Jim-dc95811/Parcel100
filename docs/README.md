@@ -4,15 +4,16 @@ This folder contains the implementation record and visual explainers for Parcel1
 
 ## Current technical notes
 
-- [Current Parcel100 v1.4 technical notes](../TECHNICAL.md)
+- [Current Parcel100 v1.5 technical notes](../TECHNICAL.md)
+- [Parcel100 1.5 change document](PARCEL100_V1.5_CHANGES.md)
 
-These notes reflect the current source, including existing-file resume behavior, visible retries, four-part difficult-cell fallback, the Florida Acres field, and the current non-atomic final-file write behavior.
+These notes reflect the current source, including service-root discovery, resume with incomplete-cell rebuild, visible retries, four-part difficult-cell fallback, batch splitting, the per-parcel completeness check, the Florida Acres field, and `.partial` then rename file writes.
 
 ## Detailed architecture record
 
 - [Parcel100 GeoJSON Construction Technical Design (PDF)](Parcel100_GeoJSON_Construction_Technical_Design.pdf)
 
-The PDF is the detailed v1.3 engineering record for the core extraction/conversion architecture. Its retry/resume/fallback design remains relevant to v1.4, but use `TECHNICAL.md` for the current release state and field-selection details.
+The PDF is the detailed v1.3 engineering record for the core extraction/conversion architecture. Its retry/resume/fallback design remains relevant to v1.5, but use `TECHNICAL.md` for the current release state and field-selection details.
 
 ## Current ArcGIS Earth acceptance evidence
 

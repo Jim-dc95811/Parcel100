@@ -2,7 +2,7 @@
 
 ## Version
 
-Current public source: **Parcel100 1.4**.
+Current public source: **Parcel100 1.5**. 1.5 changes are recorded in [docs/PARCEL100_V1.5_CHANGES.md](docs/PARCEL100_V1.5_CHANGES.md).
 
 ## Design goal
 
@@ -77,7 +77,9 @@ W082W081N031N030-055-Parcels.geojson
 
 ## Service discovery
 
-The GUI accepts a direct ArcGIS FeatureServer **layer** URL.
+The GUI accepts an ArcGIS FeatureServer/MapServer **service root** or a direct **layer** URL. A trailing `/query` (with or without parameters) is removed.
+
+For a service root, Parcel100 reads the service's `layers` list and checks each layer, reporting progress. Polygon layers become candidates. Layers whose metadata request fails are collected as *unchecked*. If there is exactly one candidate and nothing unchecked, it is used directly; otherwise a chooser lists the candidates and names the unchecked layers. If no candidate is confirmed but some layers were unchecked, Read Service fails with a message listing them rather than claiming the service has no polygon layer. The chosen layer URL is stored and used by the build; editing the URL afterwards requires Read Service again.
 
 Parcel100 requests:
 
@@ -96,11 +98,11 @@ The Florida field suggestions are only preferences for the known statewide layer
 
 ## Resume / existing-file behavior
 
-Before making any server request for a cell, Parcel100 computes the exact expected output filename. If that path already exists, the cell is counted as an existing file and skipped.
+Before making any server request for a cell, Parcel100 computes the exact expected output filename. If that path already exists and loads as a GeoJSON FeatureCollection with a `features` list, the cell is counted as an existing file and skipped. If it exists but is not complete JSON, the cell is rebuilt and reported.
 
 This creates simple durable resume behavior for interrupted builds: rerun the same Master 4 against the same output folder and completed cell files are not redownloaded.
 
-Current caution: the program trusts an existing expected filename as complete. It does not validate JSON integrity or a checksum before skipping.
+The check is structural (valid JSON, correct type); it does not compare parcel counts against the service.
 
 ## Empty-cell probe
 
@@ -176,7 +178,7 @@ The feature request includes:
 
 ```text
 objectIds=<batch ids>
-outFields=<only user-selected fields>
+outFields=<user-selected fields + object-ID field>
 returnGeometry=true
 outSR=4326
 returnZ=false
@@ -184,9 +186,11 @@ returnM=false
 geometryPrecision=<GUI precision>
 ```
 
-This means unnecessary source attributes are never requested in the heavy feature-download pass.
+The object-ID field is requested so each returned parcel can be matched to its ID; only the user-selected fields are written. Other source attributes are never requested.
 
-Feature download requests use the same three-attempt retry mechanism. Batch size is not currently reduced adaptively after repeated failures.
+Completeness: every ID from the probe is checked off. IDs not returned are requested once more; parcels returned twice are written once. Any still missing are reported per cell in the completion warning, and the cell is still written (write and warn). If the service publishes no object-ID field, returned and expected counts are compared instead.
+
+Feature download requests use the same three-attempt retry mechanism. If a batch still fails with a recognized transient error (timeouts, 502/503/504, dropped connections), it is split in half and each half is requested, down to single parcels. A non-transient error, or a single parcel that keeps failing, stops the build.
 
 ## Output CRS
 
@@ -254,11 +258,7 @@ JSON is written without decorative whitespace to reduce file size.
 
 ## Current file-write behavior
 
-The current code writes directly to the final deterministic `.geojson` path.
-
-It does **not** currently use a temporary file plus atomic rename. Because resume trusts an existing expected filename, a future hardening option is to validate existing JSON or use temporary-file/rename semantics before considering a cell complete.
-
-Do not describe current v1.4 output as an atomic file write unless that implementation changes.
+Since 1.5, each cell is written to `<name>.geojson.partial` and renamed to the final deterministic `.geojson` path with `os.replace` only when the write has finished. A failed write removes the `.partial`. A `.partial` left by a killed process is simply overwritten on the next build. The GeoJSON `name` member is still the final file stem.
 
 ## Coordinate precision
 
@@ -376,8 +376,7 @@ These observations are field results, not universal performance guarantees.
 - No deduplication across neighboring cell files.
 - No automatic loading/unloading of cells inside ArcGIS Earth.
 - No national parcel data is bundled with the program.
-- Resume trusts an existing expected filename as complete.
-- Feature batch size does not currently shrink after repeated download failures.
+- Resume checks an existing cell file's structure, not its parcel count against the service.
 - Source quality, update schedule, allowed uses and field semantics remain the responsibility of the source provider/operator.
 
 ## Preservation rule

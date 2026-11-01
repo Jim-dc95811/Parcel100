@@ -2,7 +2,7 @@
 
 ## Download the tool
 
-### **⬇️ [DOWNLOAD PARCEL100 v1.4](downloads/Parcel100_v1.4.zip)**
+### **⬇️ [DOWNLOAD PARCEL100 v1.5](downloads/Parcel100_v1.5.zip)**
 Turn one 1-degree Master 4 box into up to 100 small, offline, ArcGIS Earth-ready parcel GeoJSON files.
 
 > **ArcGIS Earth Unlocked:** Parcel100 is the parcel-intelligence component of the broader project family. See the [master system map](https://github.com/Jim-dc95811/ArcGIS-Earth-Unlocked) and the [ArcGIS Earth Object Factory](https://github.com/Jim-dc95811/ArcGIS-Earth-Object-Factory).
@@ -24,15 +24,15 @@ Windows users can unzip the package and double-click `Parcel100.bat`.
 No QGIS project is required for production, and Parcel100 uses only the Python standard library.
 
 1. Install Python 3 on Windows and confirm `py -3 --version` works.
-2. Download and unzip `Parcel100_v1.4.zip`.
+2. Download and unzip `Parcel100_v1.5.zip`.
 3. Double-click `Parcel100.bat`.
 4. Enter the Master 4 coordinates in **west,east,south,north** order.
-5. Paste the public ArcGIS FeatureServer polygon-layer URL.
-6. Click **Read Service**.
+5. Paste the public ArcGIS FeatureServer or MapServer URL: the service itself or its parcel layer.
+6. Click **Read Service**. If the service has several polygon layers, choose the parcel layer.
 7. Select the fields you want in the offline GeoJSON. For Florida, **Recommended** selects the lean field set listed under **Florida preset** below, including Acres.
 8. Choose an output folder.
 9. Click **BUILD 100 GEOJSON FILES**.
-10. If the build is interrupted, rerun against the same Master 4 and folder; existing completed files are skipped automatically.
+10. If the build is interrupted, rerun against the same Master 4 and folder; existing complete files are skipped automatically and any incomplete cell file is rebuilt.
 11. Add the resulting `.geojson` files to ArcGIS Earth as local data.
 
 See [USER_MANUAL.md](USER_MANUAL.md) for the operator guide and [TECHNICAL.md](TECHNICAL.md) for the query/geometry details.
@@ -75,7 +75,7 @@ Each finished GeoJSON remains a real vector layer. In ArcGIS Earth the parcel po
 
 ## Florida preset
 
-Parcel100 v1.4 starts with the Florida statewide parcel FeatureServer used during development:
+Parcel100 v1.5 starts with the Florida statewide parcel FeatureServer used during development:
 
 ```text
 https://services5.arcgis.com/GcvM6vDlR2gM4x31/arcgis/rest/services/FL_Parcels/FeatureServer/0
@@ -142,7 +142,7 @@ The v1.4 acceptance run shown above produced **55 GeoJSON files, skipped 45 empt
 
 ## Current scope
 
-Parcel100 v1.4 is intentionally narrow:
+Parcel100 v1.5 is intentionally narrow:
 
 - public ArcGIS FeatureServer **polygon** layers;
 - one whole-degree Master 4 input;
@@ -150,9 +150,11 @@ Parcel100 v1.4 is intentionally narrow:
 - selected attributes only;
 - local GeoJSON output in EPSG:4326;
 - empty-cell detection and skipping;
-- automatic resume-by-existing-filename;
+- automatic resume (complete cell files are skipped, incomplete ones rebuilt);
+- every parcel ID checked, with a per-cell warning if the service leaves any out;
 - visible transient-request retries;
 - four-part difficult-cell ID fallback;
+- timed-out download batches split and retried;
 - no third-party Python packages.
 
 It is not a parcel-data provider, national parcel database, geocoder, title search, tax system, or substitute for authoritative local records.
@@ -178,10 +180,10 @@ The two remain separate layers, so parcel boundaries and attributes stay clickab
 
 ## Documentation
 
-- [USER_MANUAL.md](USER_MANUAL.md) - current v1.4 step-by-step operator manual.
+- [USER_MANUAL.md](USER_MANUAL.md) - current v1.5 step-by-step operator manual.
 - [FIND_A_PARCEL_SERVICE.md](FIND_A_PARCEL_SERVICE.md) - how to locate the real FeatureServer behind a public parcel map.
 - [docs/](docs/README.md) - GeoJSON construction technical design PDF (v1.3 engineering record) and project diagrams.
-- [TECHNICAL.md](TECHNICAL.md) - current v1.4 service queries, resilience, cell logic, geometry conversion and output behavior.
+- [TECHNICAL.md](TECHNICAL.md) - current v1.5 service queries, resilience, cell logic, geometry conversion and output behavior.
 - [CONTINUITY.md](CONTINUITY.md) - current project handoff and proven field state.
 - [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) - public-release/regression checklist.
 - [CHANGELOG.md](CHANGELOG.md) - release history.

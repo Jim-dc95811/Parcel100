@@ -20,7 +20,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Build Parcel100 v1.4 ZIP
+      - name: Build Parcel100 v1.5 ZIP
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -39,7 +39,7 @@ jobs:
 
           downloads = root / 'downloads'
           downloads.mkdir(exist_ok=True)
-          out = downloads / 'Parcel100_v1.4.zip'
+          out = downloads / 'Parcel100_v1.5.zip'
           if out.exists():
               out.unlink()
 
@@ -53,10 +53,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add downloads/Parcel100_v1.4.zip
+          git add downloads/Parcel100_v1.5.zip
           if git diff --cached --quiet; then
             echo "Package already current."
             exit 0
           fi
-          git commit -m "Build Parcel100 v1.4 download package"
+          git commit -m "Build Parcel100 v1.5 download package"
           git push

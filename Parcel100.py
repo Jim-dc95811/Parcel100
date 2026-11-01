@@ -1,5 +1,21 @@
+"""Parcel100 1.5
+
+1.5 adds service-root discovery: paste a FeatureServer/MapServer service or a layer URL;
+if the service has several polygon layers, a chooser lists them.
+
+1.5 hardening (Master 4 cells, file names, ID-query fallback, polygon conversion and
+normal output unchanged from 1.4):
+  - each cell is written as .partial and renamed when complete; on resume, an existing
+    cell that is not complete GeoJSON is rebuilt instead of skipped
+  - every parcel ID is checked; missing parcels are asked for once more and any still
+    missing are reported per cell (the cell is still written)
+  - a download batch that keeps timing out is split in half and retried
+  - the build uses the layer that was read; editing the URL afterwards asks for a re-read
+  - discovery reports layers that could not be checked and shows its progress
+"""
 import json
 import math
+import os
 import re
 import threading
 import time
@@ -11,7 +27,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
 APP_NAME = "Parcel100"
-VERSION = "1.4"
+VERSION = "1.5"
 FLORIDA_URL = "https://services5.arcgis.com/GcvM6vDlR2gM4x31/arcgis/rest/services/FL_Parcels/FeatureServer/0"
 DEFAULT_MASTER4 = "82w,81w,30n,31n"
 DEFAULT_PRECISION = 7
@@ -157,17 +173,72 @@ def _request(url, params, expect_json=True, retry_callback=None):
     raise RuntimeError(str(last_error))
 
 
-def read_service(layer_url):
+def _service_url_parts(url):
+    clean = url.strip().rstrip("/")
+    # A URL copied from a browser query page ends in /query; the layer is the part before it.
+    clean = re.sub(r"/query(?:\?.*)?$", "", clean, flags=re.IGNORECASE).rstrip("/")
+    match = re.fullmatch(r"(.+/(?:FeatureServer|MapServer))(?:/(\d+))?", clean, re.IGNORECASE)
+    if not match:
+        raise ValueError("Paste an ArcGIS FeatureServer or MapServer service or layer URL.")
+    service_url = match.group(1)
+    layer_id = int(match.group(2)) if match.group(2) is not None else None
+    return service_url, layer_id
+
+
+def _read_polygon_layer(layer_url):
     layer_url = layer_url.rstrip("/")
     meta = _request(layer_url, {"f": "json"})
     if meta.get("type") not in ("Feature Layer", None):
-        raise ValueError("URL does not appear to be an ArcGIS FeatureServer layer.")
+        raise ValueError("URL does not appear to be an ArcGIS feature layer.")
     if meta.get("geometryType") != "esriGeometryPolygon":
         raise ValueError(f"Parcel100 requires a polygon layer. Service reports: {meta.get('geometryType')}")
     fields = meta.get("fields") or []
     if not fields:
         raise ValueError("No fields were reported by the service.")
     return meta
+
+
+def discover_polygon_layers(url, progress_callback=None):
+    """Return (candidates, unchecked).
+
+    candidates: [(layer_url, meta)] for the polygon layers found.
+    unchecked:  ["name (reason)"] for advertised layers that could not be read, so a
+                layer the server failed to describe is reported rather than silently missing.
+    """
+    service_url, layer_id = _service_url_parts(url)
+    if layer_id is not None:
+        layer_url = f"{service_url}/{layer_id}"
+        return [(layer_url, _read_polygon_layer(layer_url))], []
+
+    service_meta = _request(service_url, {"f": "json"})
+    layers = [layer for layer in (service_meta.get("layers") or []) if layer.get("id") is not None]
+    candidates = []
+    unchecked = []
+    for number, layer in enumerate(layers, start=1):
+        candidate_id = layer.get("id")
+        label = layer.get("name") or f"layer {candidate_id}"
+        if progress_callback is not None:
+            progress_callback(f"Checking layer {number} of {len(layers)}: {label}...")
+        layer_url = f"{service_url}/{candidate_id}"
+        try:
+            meta = _request(layer_url, {"f": "json"})
+        except Exception as exc:
+            unchecked.append(f"{candidate_id}: {label} ({exc})")
+            continue
+        if meta.get("geometryType") != "esriGeometryPolygon":
+            continue
+        if not (meta.get("fields") or []):
+            continue
+        candidates.append((layer_url, meta))
+
+    if not candidates:
+        if unchecked:
+            raise ValueError(
+                "No polygon layer could be confirmed. These layers did not respond and may "
+                "include the parcels:\n\n" + "\n".join(unchecked[:8]) +
+                "\n\nTry again later, or paste the parcel layer's own URL (ending in /<layer number>).")
+        raise ValueError("No polygon layers were found in this ArcGIS service.")
+    return candidates, unchecked
 
 
 def _query_endpoint(layer_url):
@@ -360,27 +431,80 @@ def esri_feature_to_geojson(feature, selected_fields):
     return {"type": "Feature", "properties": props, "geometry": geometry}
 
 
-def query_features_json(layer_url, ids, fields, precision, batch_size, retry_callback=None):
-    if not ids:
-        return []
-    features = []
-    endpoint = _query_endpoint(layer_url)
-    for start in range(0, len(ids), batch_size):
-        batch = ids[start:start + batch_size]
-        params = {
-            "f": "json",
-            "objectIds": ",".join(str(x) for x in batch),
-            "outFields": ",".join(fields),
-            "returnGeometry": "true",
-            "outSR": "4326",
-            "returnZ": "false",
-            "returnM": "false",
-            "geometryPrecision": str(precision),
-        }
+def _query_esri_batch(endpoint, batch, request_fields, precision, retry_callback=None, status_callback=None):
+    """One feature request. A batch that keeps failing with a timeout-type error is split in
+    half and each half is requested separately (down to single parcels)."""
+    params = {
+        "f": "json",
+        "objectIds": ",".join(str(x) for x in batch),
+        "outFields": ",".join(request_fields),
+        "returnGeometry": "true",
+        "outSR": "4326",
+        "returnZ": "false",
+        "returnM": "false",
+        "geometryPrecision": str(precision),
+    }
+    try:
         data = _request(endpoint, params, retry_callback=retry_callback)
-        for feature in data.get("features") or []:
-            features.append(esri_feature_to_geojson(feature, fields))
-    return features
+        return data.get("features") or []
+    except RuntimeError as exc:
+        if len(batch) <= 1 or not _is_transient_query_error(exc):
+            raise
+        mid = len(batch) // 2
+        if status_callback is not None:
+            status_callback(f"batch of {len(batch):,} parcels timed out - splitting into {mid:,} + {len(batch) - mid:,}...")
+        return (_query_esri_batch(endpoint, batch[:mid], request_fields, precision, retry_callback, status_callback) +
+                _query_esri_batch(endpoint, batch[mid:], request_fields, precision, retry_callback, status_callback))
+
+
+def query_features_json(layer_url, ids, fields, precision, batch_size, retry_callback=None,
+                        oid_field=None, status_callback=None):
+    """Download the parcels for one cell. Returns (geojson_features, missing_ids).
+
+    The object-ID field is requested as well (only the chosen fields are written) so every
+    returned parcel can be matched to its ID; parcels not returned are requested once more."""
+    if not ids:
+        return [], []
+    endpoint = _query_endpoint(layer_url)
+    request_fields = list(fields)
+    if oid_field and oid_field not in request_fields:
+        request_fields.append(oid_field)
+
+    def fetch(id_list):
+        got = []
+        for start in range(0, len(id_list), batch_size):
+            got.extend(_query_esri_batch(endpoint, id_list[start:start + batch_size], request_fields,
+                                         precision, retry_callback, status_callback))
+        return got
+
+    esri = fetch(ids)
+    missing = []
+    if oid_field:
+        def seen_ids(feats):
+            return {str((f.get("attributes") or {}).get(oid_field)) for f in feats}
+        seen = seen_ids(esri)
+        missing = [i for i in ids if str(i) not in seen]
+        if missing:
+            if status_callback is not None:
+                status_callback(f"{len(missing):,} parcels were not returned - asking for them once more...")
+            try:
+                esri.extend(fetch(missing))
+            except RuntimeError:
+                pass  # reported below as still missing
+            seen = seen_ids(esri)
+            missing = [i for i in ids if str(i) not in seen]
+        # A parcel returned twice (once per request) is written once.
+        unique, kept = [], set()
+        for f in esri:
+            key = str((f.get("attributes") or {}).get(oid_field))
+            if key in kept:
+                continue
+            kept.add(key)
+            unique.append(f)
+        esri = unique
+    elif len(esri) < len(ids):
+        missing = [None] * (len(ids) - len(esri))
+    return [esri_feature_to_geojson(f, fields) for f in esri], missing
 
 
 def write_feature_collection(path, features, master_label, cell_id, bbox, source_url):
@@ -394,8 +518,29 @@ def write_feature_collection(path, features, master_label, cell_id, bbox, source
         "source": source_url,
         "features": features,
     }
-    with path.open("w", encoding="utf-8", newline="\n") as f:
-        json.dump(collection, f, ensure_ascii=False, separators=(",", ":"))
+    # Write beside the real file and rename only when complete, so an interrupted build
+    # can never leave a half-written cell that resume would treat as finished.
+    partial = path.with_name(path.name + ".partial")
+    try:
+        with partial.open("w", encoding="utf-8", newline="\n") as f:
+            json.dump(collection, f, ensure_ascii=False, separators=(",", ":"))
+        os.replace(partial, path)
+    except BaseException:
+        try:
+            partial.unlink()
+        except OSError:
+            pass
+        raise
+
+
+def is_complete_cell(path):
+    """True if an existing cell file is complete GeoJSON (written by any version)."""
+    try:
+        with path.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data.get("type") == "FeatureCollection" and isinstance(data.get("features"), list)
+    except (OSError, ValueError, AttributeError):
+        return False
 
 
 def recommended_indices(fields):
@@ -444,7 +589,7 @@ class Parcel100App(tk.Tk):
         ttk.Entry(outer, textvariable=self.master_var).grid(row=1, column=0, columnspan=3, sticky="ew", pady=(2, 8))
         ttk.Label(outer, text="Example: 82w,81w,30n,31n   (west,east,south,north)").grid(row=2, column=0, columnspan=3, sticky="w")
 
-        ttk.Label(outer, text="ArcGIS FeatureServer polygon layer URL", font=("Segoe UI", 10, "bold")).grid(row=3, column=0, sticky="w", pady=(12, 0))
+        ttk.Label(outer, text="ArcGIS FeatureServer / MapServer polygon service or layer URL", font=("Segoe UI", 10, "bold")).grid(row=3, column=0, sticky="w", pady=(12, 0))
         self.url_var = tk.StringVar(value=FLORIDA_URL)
         ttk.Entry(outer, textvariable=self.url_var).grid(row=4, column=0, columnspan=2, sticky="ew", pady=(2, 4))
         self.read_btn = ttk.Button(outer, text="Read Service", command=self.read_service_clicked)
@@ -512,11 +657,90 @@ class Parcel100App(tk.Tk):
 
     def _read_service_worker(self):
         try:
-            meta = read_service(self.url_var.get().strip())
-            fields = [f for f in meta.get("fields", []) if f.get("type") != "esriFieldTypeGeometry"]
-            self.after(0, self._load_fields, meta, fields)
+            candidates, unchecked = discover_polygon_layers(
+                self.url_var.get().strip(),
+                progress_callback=lambda text: self.after(0, self.status_var.set, text),
+            )
+            self.after(0, self._handle_polygon_layers, candidates, unchecked)
         except Exception as exc:
             self.after(0, self._error, f"Could not read service:\n\n{exc}")
+
+    def _handle_polygon_layers(self, candidates, unchecked=()):
+        unchecked = list(unchecked)
+        if len(candidates) == 1 and not unchecked:
+            layer_url, meta = candidates[0]
+            self._accept_polygon_layer(layer_url, meta)
+            return
+
+        chooser = tk.Toplevel(self)
+        chooser.title("Choose polygon layer")
+        chooser.transient(self)
+
+        ttk.Label(
+            chooser,
+            text=("This service contains multiple polygon layers. Choose one:" if len(candidates) > 1
+                  else "Polygon layer found. Use it, or Cancel and try again later:"),
+            padding=(12, 12, 12, 6),
+        ).pack(anchor="w")
+        if unchecked:
+            ttk.Label(
+                chooser,
+                text=("These layers did not respond and could not be checked:\n" +
+                      "\n".join(unchecked[:6]) + ("\n..." if len(unchecked) > 6 else "")),
+                foreground="#9a4b00", wraplength=520, justify="left", padding=(12, 0, 12, 6),
+            ).pack(anchor="w")
+
+        frame = ttk.Frame(chooser, padding=(12, 0, 12, 8))
+        frame.pack(fill="both", expand=True)
+        layer_list = tk.Listbox(frame, exportselection=False, height=min(12, len(candidates)), width=70)
+        scroll = ttk.Scrollbar(frame, orient="vertical", command=layer_list.yview)
+        layer_list.configure(yscrollcommand=scroll.set)
+        layer_list.pack(side="left", fill="both", expand=True)
+        scroll.pack(side="right", fill="y")
+
+        for layer_url, meta in candidates:
+            layer_id = layer_url.rsplit("/", 1)[-1]
+            layer_list.insert(tk.END, f"{layer_id}: {meta.get('name', 'Layer')}")
+        layer_list.selection_set(0)
+        layer_list.see(0)
+
+        buttons = ttk.Frame(chooser, padding=(12, 0, 12, 12))
+        buttons.pack(fill="x")
+
+        def use_selected(event=None):
+            selected = layer_list.curselection()
+            if not selected:
+                return
+            layer_url, meta = candidates[selected[0]]
+            try:
+                chooser.grab_release()
+            except tk.TclError:
+                pass
+            chooser.destroy()
+            self._accept_polygon_layer(layer_url, meta)
+
+        def cancel():
+            try:
+                chooser.grab_release()
+            except tk.TclError:
+                pass
+            chooser.destroy()
+            self.set_busy(False)
+            self.status_var.set("Layer selection cancelled.")
+
+        ttk.Button(buttons, text="Use Selected Layer", command=use_selected).pack(side="left")
+        ttk.Button(buttons, text="Cancel", command=cancel).pack(side="right")
+        layer_list.bind("<Double-Button-1>", use_selected)
+        chooser.protocol("WM_DELETE_WINDOW", cancel)
+        chooser.wait_visibility()
+        chooser.grab_set()
+        layer_list.focus_set()
+
+    def _accept_polygon_layer(self, layer_url, meta):
+        self.layer_url = layer_url
+        self.url_var.set(layer_url)
+        fields = [f for f in meta.get("fields", []) if f.get("type") != "esriFieldTypeGeometry"]
+        self._load_fields(meta, fields)
 
     def _load_fields(self, meta, fields):
         self.meta = meta
@@ -550,6 +774,12 @@ class Parcel100App(tk.Tk):
             return
         if self.meta is None:
             messagebox.showerror(APP_NAME, "Read the FeatureServer first.")
+            return
+        if self.url_var.get().strip().rstrip("/") != (getattr(self, "layer_url", "") or "").rstrip("/"):
+            messagebox.showerror(
+                APP_NAME,
+                "The service URL was changed after Read Service.\n\n"
+                "Click Read Service again so the field list matches the layer that will be downloaded.")
             return
         try:
             master = parse_master4(self.master_var.get())
@@ -585,25 +815,31 @@ class Parcel100App(tk.Tk):
         cells = cell_bounds(west, east, south, north)
         max_count = int(self.meta.get("maxRecordCount") or 2000)
         batch_size = max(1, min(max_count, 2000))
-        url = self.url_var.get().strip().rstrip("/")
+        url = self.layer_url.rstrip("/")
+        meta_oid = self.meta.get("objectIdField") or self.meta.get("objectIdFieldName")
         total_features = 0
         files_written = 0
         existing_files = 0
         empty_cells = 0
+        rebuilt = []
+        shortfalls = []
         try:
             for index, (cell_id, w, e, s, n) in enumerate(cells, start=1):
                 path = out_dir / output_name(label, cell_id)
                 if path.exists():
-                    existing_files += 1
-                    self.after(0, self.status_var.set, f"Cell {cell_id:03d}: existing file - skipped")
-                    self.after(0, self.progress.configure, {"value": index})
-                    continue
+                    if is_complete_cell(path):
+                        existing_files += 1
+                        self.after(0, self.status_var.set, f"Cell {cell_id:03d}: existing file - skipped")
+                        self.after(0, self.progress.configure, {"value": index})
+                        continue
+                    rebuilt.append(cell_id)
+                    self.after(0, self.status_var.set, f"Cell {cell_id:03d}: existing file is incomplete - rebuilding")
 
                 def set_cell_status(text):
                     self.after(0, self.status_var.set, f"Cell {cell_id:03d}: {text}")
 
                 set_cell_status("finding parcels...")
-                ids, _ = query_object_ids_with_fallback(
+                ids, oid_field = query_object_ids_with_fallback(
                     url,
                     (w, e, s, n),
                     status_callback=set_cell_status,
@@ -621,29 +857,50 @@ class Parcel100App(tk.Tk):
                         f"download request failed ({exc}) - retry {next_attempt} of {total_attempts}..."
                     )
 
-                features = query_features_json(
-                    url, ids, fields, precision, batch_size, retry_callback=feature_retry_status
+                features, missing = query_features_json(
+                    url, ids, fields, precision, batch_size, retry_callback=feature_retry_status,
+                    oid_field=oid_field or meta_oid, status_callback=set_cell_status,
                 )
+                if missing:
+                    shortfalls.append((cell_id, len(missing), len(ids)))
                 total_features += len(features)
                 write_feature_collection(path, features, label, cell_id, (w, e, s, n), url)
                 files_written += 1
                 self.after(0, self.progress.configure, {"value": index})
-            self.after(0, self._build_done, out_dir, total_features, files_written, existing_files, empty_cells)
+            self.after(0, self._build_done, out_dir, total_features, files_written, existing_files, empty_cells,
+                       rebuilt, shortfalls)
         except Exception as exc:
             self.after(0, self._error, f"Build stopped:\n\n{exc}")
 
-    def _build_done(self, out_dir, total_features, files_written, existing_files, empty_cells):
+    def _build_done(self, out_dir, total_features, files_written, existing_files, empty_cells,
+                    rebuilt=(), shortfalls=()):
         self.set_busy(False)
+        missing_total = sum(n for _, n, _ in shortfalls)
         self.status_var.set(
-            f"Complete: {files_written} GeoJSON files written, {existing_files} existing files skipped, "
-            f"{empty_cells} empty cells skipped, {total_features:,} parcel records written."
+            f"Complete{' with warning' if shortfalls else ''}: {files_written} GeoJSON files written, "
+            f"{existing_files} existing files skipped, {empty_cells} empty cells skipped, "
+            f"{total_features:,} parcel records written."
+            + (f" {missing_total:,} parcels not returned by the service." if shortfalls else "")
         )
-        messagebox.showinfo(
-            APP_NAME,
+        text = (
             f"Complete.\n\n{files_written} GeoJSON files written to:\n{out_dir}"
             f"\n\n{existing_files} existing files skipped."
             f"\n{empty_cells} empty cells skipped."
+            f"\n{total_features:,} parcel records written."
         )
+        if rebuilt:
+            text += ("\n\nRebuilt incomplete cell files left by an interrupted build: " +
+                     ", ".join(f"{c:03d}" for c in rebuilt) + ".")
+        if shortfalls:
+            lines = [f"  Cell {c:03d}: {n:,} of {total:,} parcels" for c, n, total in shortfalls[:12]]
+            if len(shortfalls) > 12:
+                lines.append(f"  ... and {len(shortfalls) - 12} more cells")
+            text += ("\n\nWARNING: the service did not return some parcels, even after asking again. "
+                     "These cells were written without them:\n" + "\n".join(lines) +
+                     "\n\nTo try those cells again later, delete their files and build again.")
+            messagebox.showwarning(APP_NAME, text)
+        else:
+            messagebox.showinfo(APP_NAME, text)
 
     def _error(self, message):
         self.set_busy(False)

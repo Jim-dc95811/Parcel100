@@ -31,7 +31,7 @@ Double-click:
 Parcel100.bat
 ```
 
-The GUI opens as **Parcel100 1.4**.
+The GUI opens as **Parcel100 1.5**.
 
 ## 1. Enter the Master 4 box
 
@@ -53,7 +53,7 @@ Parcel100 subdivides the box into the established 100 Master 4 cells, each appro
 
 ## 2. Enter the FeatureServer layer URL
 
-The URL must point to a polygon layer, normally ending in:
+You can paste the service itself, ending in `/FeatureServer` or `/MapServer`; Parcel100 1.5 finds its polygon layers when you click Read Service. Or point directly to a polygon layer, normally ending in:
 
 ```text
 /FeatureServer/0
@@ -81,11 +81,15 @@ Read Service
 
 Parcel100 reads the layer metadata and populates the field list.
 
+If you pasted a service root, Parcel100 checks each layer (the status line shows `Checking layer N of M`). When there is more than one polygon layer, choose the parcel layer from the list. Layers that did not respond are listed in orange; if the parcel layer might be one of them, click Cancel and try again later, or paste that layer's own URL.
+
+If you change the URL after Read Service, click Read Service again before building. Parcel100 will remind you.
+
 The status line reports the number of fields and the service's reported maximum record count.
 
 If the field list remains empty, verify that:
 
-- the URL points directly to a FeatureServer layer;
+- the URL points to a FeatureServer/MapServer service or one of its layers;
 - the service is public/reachable;
 - the layer is a polygon layer.
 
@@ -189,7 +193,9 @@ At the end Parcel100 reports:
 - number of GeoJSON files written during the current run;
 - number of existing files skipped;
 - number of empty cells skipped;
-- total parcel records written during the current run.
+- total parcel records written during the current run;
+- any incomplete cell files that were rebuilt;
+- a **warning** listing cells where the service did not return every parcel, even after asking again. Those cells are still written; to try them again later, delete their files and build again.
 
 A field-tested Florida run produced:
 
@@ -216,9 +222,9 @@ These are real-world examples, not guaranteed sizes or speeds.
 
 Rerun Parcel100 with the same Master 4 and the same output folder.
 
-Any expected GeoJSON filename already present is skipped before a server query is made. Missing cells continue normally.
+Any complete GeoJSON cell file already present is skipped before a server query is made. Missing cells continue normally.
 
-Current caution: Parcel100 trusts an existing expected filename as complete. If you intentionally want to rebuild a cell, delete that cell's GeoJSON first.
+Each cell is written as a `.partial` file and renamed only when complete, so an interruption cannot leave a half-written cell. An existing cell file that is not complete GeoJSON (for example, one left by an interrupted older version) is rebuilt and listed in the completion message. If you intentionally want to rebuild a complete cell, delete that cell's GeoJSON first.
 
 ## Open the results in ArcGIS Earth
 
@@ -273,7 +279,7 @@ Check the URL in a browser. It should resolve to an ArcGIS REST layer page and r
 
 ### Build pauses and shows retry text
 
-That is expected resilience behavior. Parcel100 retries transient request failures up to three times. A repeatedly failing full-cell ID query may then switch automatically to the four-part fallback.
+That is expected resilience behavior. Parcel100 retries transient request failures up to three times. A repeatedly failing full-cell ID query may then switch automatically to the four-part fallback. A download batch that keeps timing out is split in half and retried, which shows as `batch of N parcels timed out - splitting`.
 
 ### Build stops on one cell
 
