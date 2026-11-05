@@ -1,5 +1,7 @@
 # Parcel100 Continuity / Handoff
 
+**2026-11-04 update (Claude):** 'What's in the zip' sheet `images/parcel100_whats_in_the_zip*.png` - every file in the download explained in plain words (Jim's idea), linked under the download heading on the README and the front page and shown in the user manual (PDF rebuilt). Made by `tools/graphics/make_zip_sheets.py` in ArcGIS-Earth-Unlocked; **if the zip contents change, update its card list there and re-render.**
+
 ## Current state
 
 **2026-11-01 update:** the front page follows the family-wide layout (download link, user manual link, one line, screenshot that opens the video). Screenshot `images/parcel100_popup_arcgis_earth.jpg` opens video `_hMB_TOODOQ`. `USER_MANUAL.md` was corrected against the 1.5 code; `Parcel100_User_Manual.pdf` (previously v1.1) is generated from it. A corrupt SVG was removed from `docs/images/`.
