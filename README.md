@@ -13,6 +13,7 @@
 
 ### **⬇️ [3. DOWNLOAD PARCEL100 v1.5](downloads/Parcel100_v1.5.zip)**
 **📖 [User manual](USER_MANUAL.md)**
+**🗂️ [What's in the zip - every file explained](images/parcel100_whats_in_the_zip_full.png)**
 
 Turn one 1-degree Master 4 box into up to 100 small, offline, ArcGIS Earth-ready parcel GeoJSON files.
 

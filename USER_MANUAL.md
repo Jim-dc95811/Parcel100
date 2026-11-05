@@ -38,6 +38,10 @@ Parcel100.bat
 
 The GUI opens as **Parcel100 1.5**.
 
+## What's in the zip
+
+![What's in the Parcel100 folder: Parcel100.bat opens it, Parcel100.py is the program, README.txt, and up to 100 parcel GeoJSON files it makes](images/parcel100_whats_in_the_zip.png)
+
 ## 1. Enter the Master 4 box
 
 Enter exactly four whole-degree edges in this order:
