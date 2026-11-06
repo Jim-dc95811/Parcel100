@@ -17,10 +17,12 @@ The current production path is proven against the Florida statewide parcel Featu
 Main files:
 
 ```text
-Parcel100.py
 Parcel100.bat
-downloads/Parcel100_v1.5.zip   (previous: downloads/Parcel100_v1.4.zip, kept for existing links)
+System Files/Parcel100.py
+downloads/Parcel100_v1.5.1.zip   (previous: downloads/Parcel100_v1.5.zip and _v1.4.zip, kept for existing links)
 ```
+
+**1.5.1 (2026-11-06, launcher/layout only - Jim's one-obvious-file rule):** the zip holds `Parcel100_v1.5.1/Parcel100.bat` + `System Files/Parcel100.py` (program = 1.5, `ba0627bc...`); `PACKAGE_README.txt` removed; the GitHub Actions workflow builds `downloads/Parcel100_v1.5.1.zip` from `System Files/Parcel100.py` + `Parcel100.bat`.
 
 The program uses only the Python standard library.
 

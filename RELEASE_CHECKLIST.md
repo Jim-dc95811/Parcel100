@@ -99,10 +99,10 @@ Confirm the GeoJSON opens in a real GIS/viewer and the geometry is visually corr
 The ZIP should contain:
 
 ```text
-Parcel100/
-  Parcel100.py
+Parcel100_v1.5.1/
   Parcel100.bat
-  README.txt
+  System Files/
+    Parcel100.py
 ```
 
 - ZIP filename includes the correct release version.

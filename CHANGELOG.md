@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.1 - 2026-11-06
+
+One obvious file (Jim's packaging rule): the zip holds a `Parcel100_v1.5.1` folder with `Parcel100.bat` and `System Files\Parcel100.py`. The README text file is no longer in the download. Program unchanged (1.5).
+
 ## 1.5 - 2026-11-01
 
 Discovery and hardening release; normal output is byte-identical to 1.4. Details: [docs/PARCEL100_V1.5_CHANGES.md](docs/PARCEL100_V1.5_CHANGES.md).

@@ -4,9 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - Parcel100.py
+      - 'System Files/Parcel100.py'
       - Parcel100.bat
-      - PACKAGE_README.txt
       - .github/workflows/build-package.yml
   workflow_dispatch:
 
@@ -20,7 +19,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Build Parcel100 v1.5 ZIP
+      - name: Build Parcel100 v1.5.1 ZIP
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -28,18 +27,19 @@ jobs:
           import zipfile
 
           root = Path('.')
-          stage = root / '.package-stage' / 'Parcel100'
+          # v1.5.1 (2026-11-06): one obvious file - Parcel100.bat + System Files (Jim's packaging rule)
+          stage = root / '.package-stage' / 'Parcel100_v1.5.1'
           if stage.parent.exists():
               shutil.rmtree(stage.parent)
           stage.mkdir(parents=True)
 
-          shutil.copy2(root / 'Parcel100.py', stage / 'Parcel100.py')
+          (stage / 'System Files').mkdir()
+          shutil.copy2(root / 'System Files' / 'Parcel100.py', stage / 'System Files' / 'Parcel100.py')
           shutil.copy2(root / 'Parcel100.bat', stage / 'Parcel100.bat')
-          shutil.copy2(root / 'PACKAGE_README.txt', stage / 'README.txt')
 
           downloads = root / 'downloads'
           downloads.mkdir(exist_ok=True)
-          out = downloads / 'Parcel100_v1.5.zip'
+          out = downloads / 'Parcel100_v1.5.1.zip'
           if out.exists():
               out.unlink()
 
@@ -53,10 +53,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add downloads/Parcel100_v1.5.zip
+          git add downloads/Parcel100_v1.5.1.zip
           if git diff --cached --quiet; then
             echo "Package already current."
             exit 0
           fi
-          git commit -m "Build Parcel100 v1.5 download package"
+          git commit -m "Build Parcel100 v1.5.1 download package"
           git push

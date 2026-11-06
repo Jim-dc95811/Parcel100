@@ -11,7 +11,7 @@
 > 2. **Windows security warning:** Windows may warn about any program downloaded from the internet. Click **More info > Run anyway** (blue "Windows protected your PC" screen) or **Run**. To avoid the warning, right-click the zip > **Properties** > tick **Unblock** > **OK** before extracting.
 > 3. **Installing Python:** if the installer shows **"Add python.exe to PATH"**, tick it.
 
-### **⬇️ [3. DOWNLOAD PARCEL100 v1.5](downloads/Parcel100_v1.5.zip)**
+### **⬇️ [3. DOWNLOAD PARCEL100 v1.5.1](downloads/Parcel100_v1.5.1.zip)**
 **📖 [User manual](USER_MANUAL.md)**
 **🗂️ [What's in the zip - every file explained](images/parcel100_whats_in_the_zip_full.png)**
 
@@ -36,8 +36,8 @@ Windows users can unzip the package and double-click `Parcel100.bat`.
 No QGIS project is required for production, and Parcel100 uses only the Python standard library.
 
 1. Install Python 3 on Windows and confirm `py -3 --version` works.
-2. Download and unzip `Parcel100_v1.5.zip`.
-3. Double-click `Parcel100.bat`.
+2. Download and extract `Parcel100_v1.5.1.zip`.
+3. Double-click `Parcel100.bat` (leave `System Files` alone - it holds the program).
 4. Enter the Master 4 coordinates in **west,east,south,north** order.
 5. Paste the public ArcGIS FeatureServer or MapServer URL: the service itself or its parcel layer.
 6. Click **Read Service**. If the service has several polygon layers, choose the parcel layer.

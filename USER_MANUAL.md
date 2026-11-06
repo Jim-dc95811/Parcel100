@@ -1,4 +1,4 @@
-# Parcel100 1.5 User Manual
+# Parcel100 1.5.1 User Manual
 
 A printable copy of this manual is available as [Parcel100_User_Manual.pdf](Parcel100_User_Manual.pdf).
 
@@ -20,14 +20,14 @@ No QGIS installation is required for production and no third-party Python packag
 
 ## Start Parcel100
 
-1. Download [`Parcel100_v1.5.zip`](downloads/Parcel100_v1.5.zip) and unzip it. It contains a `Parcel100` folder.
+1. Download [`Parcel100_v1.5.1.zip`](downloads/Parcel100_v1.5.1.zip) and extract it. It contains a `Parcel100_v1.5.1` folder.
 2. Install Python 3 from python.org if it is not already installed. In a Command Prompt, `py -3 --version` should print a version number.
 
-Keep these two files in the same folder:
+The folder holds just two things - keep them together:
 
 ```text
-Parcel100.py
 Parcel100.bat
+System Files\      (the program - leave it alone)
 ```
 
 Double-click:
@@ -36,11 +36,11 @@ Double-click:
 Parcel100.bat
 ```
 
-The GUI opens as **Parcel100 1.5**.
+The GUI opens as **Parcel100 1.5** (1.5.1 is the 1.5 program in a tidier folder).
 
 ## What's in the zip
 
-![What's in the Parcel100 folder: Parcel100.bat opens it, Parcel100.py is the program, README.txt, and up to 100 parcel GeoJSON files it makes](images/parcel100_whats_in_the_zip.png)
+![What's in the Parcel100 folder: Parcel100.bat opens it, System Files holds the program, and up to 100 parcel GeoJSON files it makes](images/parcel100_whats_in_the_zip.png)
 
 ## 1. Enter the Master 4 box
 
