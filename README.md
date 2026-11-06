@@ -207,9 +207,9 @@ The two remain separate layers, so parcel boundaries and attributes stay clickab
 
 ## Human-AI engineering collaboration
 
-Parcel100 was conceived, directed, tested and field-validated by **Jim Gaddy**, working with **OpenAI's ChatGPT** as an AI coding and documentation partner. Jim supplied the operational problem, Master 4 architecture, real FeatureServer tests, ArcGIS Earth acceptance testing and production feedback; ChatGPT assisted with FeatureServer query design, implementation and documentation.
+Parcel100 was conceived, directed, tested and field-validated by **Jim Gaddy**, working with **OpenAI's ChatGPT** and **Anthropic's Claude** as AI coding and documentation partners. Jim supplied the operational problem, Master 4 architecture, real FeatureServer tests, ArcGIS Earth acceptance testing and production feedback; ChatGPT assisted with FeatureServer query design, implementation and documentation; Claude built the 1.5 release (service-root discovery and layer chooser, resume checks, completeness checks, batch splitting), its regression tests, the user manual and the page.
 
-This acknowledgment is not a claim of OpenAI sponsorship or endorsement.
+This acknowledgment is not a claim of OpenAI or Anthropic sponsorship or endorsement.
 
 ## Independence
 

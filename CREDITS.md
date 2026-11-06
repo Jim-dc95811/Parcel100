@@ -8,7 +8,9 @@
 
 **OpenAI's ChatGPT** assisted with ArcGIS FeatureServer query design, Python implementation, geometry conversion logic, troubleshooting, documentation and repository preparation.
 
-This acknowledgment is not a claim of OpenAI sponsorship or endorsement.
+**Anthropic's Claude** built the 1.5 release with Jim (service-root discovery and polygon-layer chooser, resume checks, per-parcel completeness checks, splitting of timed-out batches), tested it against mock FeatureServers, and wrote the 1.5 user manual, its PDF and the 'What's in the zip' sheet.
+
+This acknowledgment is not a claim of OpenAI or Anthropic sponsorship or endorsement.
 
 ## Technologies and specifications
 
