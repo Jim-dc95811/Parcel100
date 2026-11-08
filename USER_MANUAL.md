@@ -1,4 +1,18 @@
-# Parcel100 1.5.1 User Manual
+# Parcel100 1.5.2 User Manual
+
+<!-- install-blurb:start -->
+> ### Installing Parcel100 - read this first
+>
+> 1. **Extract All first:** right-click the downloaded zip > **Extract All**, then open the new folder. (Double-clicking files while they are still inside the zip does not work.)
+> 2. **Double-click `Parcel100.bat`** - the only .bat in the folder. This manual sits right next to it. The **System Files** folder holds the program - leave it alone.
+> 3. **Blue "Windows protected your PC" box?** Click **More info**, then **Run anyway**. It only asks the first time. (Or, before extracting: right-click the zip > **Properties** > tick **Unblock** > **OK**.)
+> 4. **Python - nothing to install by hand.** If Python is missing, the window asks **Install Python now? [Y/N]**: type **Y** and press Enter. It installs just for you (no admin needed). On an older PC this can take several minutes and Windows Defender may make the PC look frozen - **do not close the window**.
+> 5. An internet connection (it downloads public parcel data) and a Master 4 box (for example `82w, 81w, 30n, 31n`).
+> 6. To see the parcels you need **ArcGIS Earth** (free from Esri: https://www.esri.com/en-us/arcgis/products/arcgis-earth/downloads).
+>
+> Something stops it? The window says what to do in plain words, and keeps a log in `System Files\Ready_To_Fly_log.txt`. On a work computer that blocks installs, ask IT to install Python 3 from python.org.
+<!-- install-blurb:end -->
+
 
 A printable copy of this manual is available as [Parcel100_User_Manual.pdf](Parcel100_User_Manual.pdf).
 
@@ -23,10 +37,11 @@ No QGIS installation is required for production and no third-party Python packag
 1. Download [`Parcel100_v1.5.2.zip`](downloads/Parcel100_v1.5.2.zip) and extract it. It contains a `Parcel100_v1.5.2` folder.
 2. Python 3: nothing to install by hand. Since this version the .bat does it for you: if Python is missing it asks **Install Python now? [Y/N]** - answer **Y** (installs just for you, no admin; on an older PC it can take several minutes - don't close the window).
 
-The folder holds just two things - keep them together:
+The folder holds just three things - keep them together:
 
 ```text
 Parcel100.bat
+Parcel100_User_Manual.pdf   (this manual)
 System Files\      (the program - leave it alone)
 ```
 

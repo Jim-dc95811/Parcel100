@@ -7,6 +7,7 @@ on:
       - 'System Files/Parcel100.py'
       - Parcel100.bat
       - 'System Files/Ready_To_Fly.ps1'
+      - Parcel100_User_Manual.pdf
       - .github/workflows/build-package.yml
   workflow_dispatch:
 
@@ -39,6 +40,7 @@ jobs:
           shutil.copy2(root / 'System Files' / 'Parcel100.py', stage / 'System Files' / 'Parcel100.py')
           shutil.copy2(root / 'Parcel100.bat', stage / 'Parcel100.bat')
           shutil.copy2(root / 'System Files' / 'Ready_To_Fly.ps1', stage / 'System Files' / 'Ready_To_Fly.ps1')
+          shutil.copy2(root / 'Parcel100_User_Manual.pdf', stage / 'Parcel100_User_Manual.pdf')   # 2026-11-08: manual beside the .bat (Jim)
 
           downloads = root / 'downloads'
           downloads.mkdir(exist_ok=True)
