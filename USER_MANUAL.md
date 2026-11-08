@@ -1,4 +1,4 @@
-# Parcel100 2.0 User Manual
+# Parcel100 2.1 User Manual
 
 <!-- install-blurb:start -->
 > ### Installing Parcel100 - read this first
@@ -34,7 +34,7 @@ No QGIS installation is required for production and no third-party Python packag
 
 ## Start Parcel100
 
-1. Download [`Parcel100_v2.0.zip`](downloads/Parcel100_v2.0.zip) and extract it. It contains a `Parcel100_v2.0` folder.
+1. Download [`Parcel100_v2.1.zip`](downloads/Parcel100_v2.1.zip) and extract it. It contains a `Parcel100_v2.1` folder.
 2. Python 3: nothing to install by hand. Since this version the .bat does it for you: if Python is missing it asks **Install Python now? [Y/N]** - answer **Y** (installs just for you, no admin; on an older PC it can take several minutes - don't close the window).
 
 The folder holds just three things - keep them together:
@@ -51,7 +51,7 @@ Double-click:
 Parcel100.bat
 ```
 
-The GUI opens as **Parcel100 2.0** (the 1.5 program; the whole family moved to 2.0 on 8 Nov 2026).
+The GUI opens as **Parcel100 2.1**. What changed: [docs/PARCEL100_V2.1_CHANGES.md](docs/PARCEL100_V2.1_CHANGES.md).
 
 ## What's in the zip
 
@@ -77,7 +77,7 @@ Parcel100 subdivides the box into the established 100 Master 4 cells, each appro
 
 ## 2. Enter the parcel service URL
 
-You can paste the service itself, ending in `/FeatureServer` or `/MapServer`; Parcel100 1.5 finds its polygon layers when you click Read Service. Or point directly to a polygon layer, normally ending in:
+You can paste the service itself, ending in `/FeatureServer` or `/MapServer`; Parcel100 1.5 finds its polygon layers when you click Read Service. A link copied from the browser with `?f=pjson` or `/query` on the end works too. Or point directly to a polygon layer, normally ending in:
 
 ```text
 /FeatureServer/0
@@ -214,12 +214,21 @@ Only populated unfinished cells are written.
 
 ## Completion message
 
-At the end Parcel100 reports:
+At the end Parcel100 reports the **100 cells** as three numbers that always add up to 100, then the parcels:
 
-- number of GeoJSON files written during the current run;
-- number of existing files skipped;
-- number of empty cells skipped;
-- total parcel records written during the current run;
+```text
+100 cells:
+   64 written
+   36 already there (skipped)
+   0 empty - no parcels (skipped)
+
+48,212 parcels written into the 64 new files.
+```
+
+It also lists:
+
+- parcels the service sent with **no shape** (they are in the files with their fields but draw nothing);
+- cells **replaced** because their old files came from another layer or field list (see Resume);
 - any incomplete cell files that were rebuilt;
 - a **warning** listing cells where the service did not return every parcel, even after asking again. Those cells are still written; to try them again later, delete their files and build again.
 
@@ -251,6 +260,14 @@ Rerun Parcel100 with the same Master 4 and the same output folder.
 Any complete GeoJSON cell file already present is skipped before a server query is made. Missing cells continue normally.
 
 Each cell is written as a `.partial` file and renamed only when complete, so an interruption cannot leave a half-written cell. An existing cell file that is not complete GeoJSON (for example, one left by an interrupted older version) is rebuilt and listed in the completion message. If you intentionally want to rebuild a complete cell, delete that cell's GeoJSON first.
+
+**Another layer or other fields into the same folder (2.1):** when you click BUILD, Parcel100 checks the cell files already in the folder. If any came from a different layer, or hold a different set of fields, it asks:
+
+- **Yes** - replace them with this layer and these fields (an old cell the new layer has no parcels in is removed);
+- **No** - keep the old files (they are skipped, as before);
+- **Cancel** - build nothing.
+
+A true resume - same layer, same fields - is not asked about; it just continues.
 
 ## Open the results in ArcGIS Earth
 
@@ -300,6 +317,8 @@ Coverage and schema vary widely. Some states publish statewide parcel layers; ot
 ## Troubleshooting
 
 ### Read Service fails
+
+"The server did not send map data" means the link led to a login page or something that is not an ArcGIS REST service; use the public `/FeatureServer` or `/MapServer` link.
 
 Check the URL in a browser. It should open an ArcGIS REST page for the service or layer; a parcel layer reports `Geometry Type: esriGeometryPolygon`. If Parcel100 says it requires a polygon layer, the URL points to a point or line layer; use the parcel layer instead. If it lists layers that did not respond, try again later or paste the parcel layer's own URL.
 

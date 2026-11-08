@@ -13,12 +13,12 @@
 > 2. **Windows security warning:** Windows may warn about any program downloaded from the internet. Click **More info > Run anyway** (blue "Windows protected your PC" screen) or **Run**. To avoid the warning, right-click the zip > **Properties** > tick **Unblock** > **OK** before extracting.
 > 3. **Installing Python:** if the installer shows **"Add python.exe to PATH"**, tick it.
 
-### **⬇️ [3. DOWNLOAD PARCEL100 v2.0](downloads/Parcel100_v2.0.zip)**
+### **⬇️ [3. DOWNLOAD PARCEL100 v2.1](downloads/Parcel100_v2.1.zip)**
 **📖 [User manual](USER_MANUAL.md)**
 **🗂️ [What's in the zip - every file explained](images/parcel100_whats_in_the_zip_full.png)**
 **📦 [Download the Whole ArcGIS Earth Unlocked Series of Tools - all 10 in one zip](https://github.com/Jim-dc95811/ArcGIS-Earth-Unlocked/raw/main/downloads/ArcGIS_Earth_Unlocked_All_Tools.zip)**
 
-Turn one 1-degree Master 4 box into up to 100 small, offline, ArcGIS Earth-ready parcel GeoJSON files. **2.0 (8 Nov 2026):** the whole ArcGIS Earth Unlocked family moved to 2.0 as one reference point ([2.0 Reference](https://github.com/Jim-dc95811/ArcGIS-Earth-Unlocked/blob/main/REFERENCE_2.0.md)) - the program is the 1.5 program, cells come out exactly as before. New in 1.5.2 (Ready to Fly): the .bat installs Python for you if it is missing - answer **Y**, no admin needed.
+Turn one 1-degree Master 4 box into up to 100 small, offline, ArcGIS Earth-ready parcel GeoJSON files. **2.1 (8 Nov 2026):** asks before keeping cell files from another layer or other fields, takes links copied from the browser, gets past parcels with an empty shape, and the end message adds up to 100 cells - cells come out exactly as before ([what changed](docs/PARCEL100_V2.1_CHANGES.md)). New in 1.5.2 (Ready to Fly): the .bat installs Python for you if it is missing - answer **Y**, no admin needed.
 
 [![Parcel100 parcels in ArcGIS Earth: clicking a parcel shows its ID, owner, address, city, ZIP and acres](images/parcel100_popup_arcgis_earth.jpg)](https://www.youtube.com/watch?v=_hMB_TOODOQ)
 
@@ -39,7 +39,7 @@ Windows users can unzip the package and double-click `Parcel100.bat`.
 No QGIS project is required for production, and Parcel100 uses only the Python standard library.
 
 1. Install Python 3 on Windows and confirm `py -3 --version` works.
-2. Download and extract `Parcel100_v2.0.zip`.
+2. Download and extract `Parcel100_v2.1.zip`.
 3. Double-click `Parcel100.bat` (leave `System Files` alone - it holds the program).
 4. Enter the Master 4 coordinates in **west,east,south,north** order.
 5. Paste the public ArcGIS FeatureServer or MapServer URL: the service itself or its parcel layer.
@@ -195,7 +195,7 @@ The two remain separate layers, so parcel boundaries and attributes stay clickab
 
 ## Documentation
 
-- [USER_MANUAL.md](USER_MANUAL.md) - current 2.0 step-by-step operator manual.
+- [USER_MANUAL.md](USER_MANUAL.md) - current 2.1 step-by-step operator manual.
 - [FIND_A_PARCEL_SERVICE.md](FIND_A_PARCEL_SERVICE.md) - how to locate the real FeatureServer behind a public parcel map.
 - [docs/](docs/README.md) - GeoJSON construction technical design PDF (v1.3 engineering record) and project diagrams.
 - [TECHNICAL.md](TECHNICAL.md) - current v1.5 service queries, resilience, cell logic, geometry conversion and output behavior.

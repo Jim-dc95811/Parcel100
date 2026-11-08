@@ -1,6 +1,10 @@
 # Changelog
 
 
+## Parcel100 2.1 - 2026-11-08
+
+- Re-hardening: asks Replace / Keep / Cancel when cell files already in the folder came from another layer or other fields; browser URLs (`?f=pjson`) accepted; plain message for a login page; a parcel with an empty shape no longer stops the build (written without a shape, counted); plain precision / Master 4 messages; the end message shows the 100 cells (written / already there / empty) with parcels on their own line. Normal output identical to 2.0. Live-tested by Jim. See [docs/PARCEL100_V2.1_CHANGES.md](docs/PARCEL100_V2.1_CHANGES.md). The workflow now builds `downloads/Parcel100_v2.1.zip`; the 2.0 zip moved to `archive/`.
+
 ## Parcel100 2.0 - the 2.0 Reference (2026-11-08)
 
 - The whole ArcGIS Earth Unlocked family moved to 2.0 as one reference point (Jim). Program = 1.5 with only the version text changed (diff-checked). The workflow now builds `downloads/Parcel100_v2.0.zip`; older zips moved to `archive/`.

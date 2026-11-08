@@ -21,7 +21,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Build Parcel100 v2.0 ZIP
+      - name: Build Parcel100 v2.1 ZIP
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -31,8 +31,8 @@ jobs:
           root = Path('.')
           # v1.5.1 (2026-11-06): one obvious file - Parcel100.bat + System Files (Jim's packaging rule)
           # v1.5.2 (2026-11-08): Ready to Fly launcher - System Files/Ready_To_Fly.ps1 rides along
-          # 2.0 (2026-11-08): the 2.0 Reference - the whole family moved to 2.0 (program = 1.5)
-          stage = root / '.package-stage' / 'Parcel100_v2.0'
+          # 2.1 (2026-11-08): re-hardening (2.0 = the 2.0 Reference, program 1.5)
+          stage = root / '.package-stage' / 'Parcel100_v2.1'
           if stage.parent.exists():
               shutil.rmtree(stage.parent)
           stage.mkdir(parents=True)
@@ -45,7 +45,7 @@ jobs:
 
           downloads = root / 'downloads'
           downloads.mkdir(exist_ok=True)
-          out = downloads / 'Parcel100_v2.0.zip'
+          out = downloads / 'Parcel100_v2.1.zip'
           if out.exists():
               out.unlink()
 
@@ -59,10 +59,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add downloads/Parcel100_v2.0.zip
+          git add downloads/Parcel100_v2.1.zip
           if git diff --cached --quiet; then
             echo "Package already current."
             exit 0
           fi
-          git commit -m "Build Parcel100 v2.0 download package"
+          git commit -m "Build Parcel100 v2.1 download package"
           git push

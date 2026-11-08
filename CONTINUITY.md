@@ -218,3 +218,7 @@ Parcel100 GeoJSON = what the parcel database knows about the ground
 Preserve the existing Master 4 numbering and deterministic filename contract unless an intentional version change is made.
 
 The 100-cell geography is now shared infrastructure across multiple offline-map/intelligence workflows.
+
+## 2026-11-08 - Parcel100 2.1 (Claude)
+
+Re-hardening: `mismatched_cells` / `read_cell_header` (first 256 KB of each cell file: `source` + first parcel's property names) -> Replace / Keep / Cancel before a build; replace also deletes an old cell the new layer leaves empty; URL `?`/`#` trimmed; NOT_MAP_DATA; empty shape `{}` -> geometry null + counted; precision / Master 4 messages; end message = 100 cells (written / already there / empty) + parcels. Normal output byte-identical to 2.0. Test server + rig in ArcGIS-Earth-Unlocked `tools/test-rigs/parcel_test_server.py` / `parcel100_test_v21.py`. Workflow builds `downloads/Parcel100_v2.1.zip`.
