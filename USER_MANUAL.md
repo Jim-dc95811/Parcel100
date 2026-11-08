@@ -20,8 +20,8 @@ No QGIS installation is required for production and no third-party Python packag
 
 ## Start Parcel100
 
-1. Download [`Parcel100_v1.5.1.zip`](downloads/Parcel100_v1.5.1.zip) and extract it. It contains a `Parcel100_v1.5.1` folder.
-2. Install Python 3 from python.org if it is not already installed. In a Command Prompt, `py -3 --version` should print a version number.
+1. Download [`Parcel100_v1.5.2.zip`](downloads/Parcel100_v1.5.2.zip) and extract it. It contains a `Parcel100_v1.5.2` folder.
+2. Python 3: nothing to install by hand. Since this version the .bat does it for you: if Python is missing it asks **Install Python now? [Y/N]** - answer **Y** (installs just for you, no admin; on an older PC it can take several minutes - don't close the window).
 
 The folder holds just two things - keep them together:
 

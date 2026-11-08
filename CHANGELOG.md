@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.2 - 2026-11-08
+
+Ready to Fly: `Parcel100.bat` - the launcher now gets the PC ready first: it finds Python or installs it for you (just for you, no admin - answer **Y**), then starts the tool. New file `System Files\Ready_To_Fly.ps1` (log: `System Files\Ready_To_Fly_log.txt`). Program byte-identical to the previous release. Live-tested by Jim 2026-11-08.
+
 ## 1.5.1 - 2026-11-06
 
 One obvious file (Jim's packaging rule): the zip holds a `Parcel100_v1.5.1` folder with `Parcel100.bat` and `System Files\Parcel100.py`. The README text file is no longer in the download. Program unchanged (1.5).

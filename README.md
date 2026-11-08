@@ -13,11 +13,12 @@
 > 2. **Windows security warning:** Windows may warn about any program downloaded from the internet. Click **More info > Run anyway** (blue "Windows protected your PC" screen) or **Run**. To avoid the warning, right-click the zip > **Properties** > tick **Unblock** > **OK** before extracting.
 > 3. **Installing Python:** if the installer shows **"Add python.exe to PATH"**, tick it.
 
-### **⬇️ [3. DOWNLOAD PARCEL100 v1.5.1](downloads/Parcel100_v1.5.1.zip)**
+### **⬇️ [3. DOWNLOAD PARCEL100 v1.5.2](downloads/Parcel100_v1.5.2.zip)**
 **📖 [User manual](USER_MANUAL.md)**
 **🗂️ [What's in the zip - every file explained](images/parcel100_whats_in_the_zip_full.png)**
+**📦 [Download the Whole ArcGIS Earth Unlocked Series of Tools - all 10 in one zip](https://github.com/Jim-dc95811/ArcGIS-Earth-Unlocked/raw/main/downloads/ArcGIS_Earth_Unlocked_All_Tools.zip)**
 
-Turn one 1-degree Master 4 box into up to 100 small, offline, ArcGIS Earth-ready parcel GeoJSON files.
+Turn one 1-degree Master 4 box into up to 100 small, offline, ArcGIS Earth-ready parcel GeoJSON files. **New in 1.5.2 (Ready to Fly):** the .bat installs Python for you if it is missing - answer **Y**, no admin needed.
 
 [![Parcel100 parcels in ArcGIS Earth: clicking a parcel shows its ID, owner, address, city, ZIP and acres](images/parcel100_popup_arcgis_earth.jpg)](https://www.youtube.com/watch?v=_hMB_TOODOQ)
 
@@ -38,7 +39,7 @@ Windows users can unzip the package and double-click `Parcel100.bat`.
 No QGIS project is required for production, and Parcel100 uses only the Python standard library.
 
 1. Install Python 3 on Windows and confirm `py -3 --version` works.
-2. Download and extract `Parcel100_v1.5.1.zip`.
+2. Download and extract `Parcel100_v1.5.2.zip`.
 3. Double-click `Parcel100.bat` (leave `System Files` alone - it holds the program).
 4. Enter the Master 4 coordinates in **west,east,south,north** order.
 5. Paste the public ArcGIS FeatureServer or MapServer URL: the service itself or its parcel layer.
