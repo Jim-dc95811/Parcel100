@@ -1,4 +1,4 @@
-# Parcel100 1.5.2 User Manual
+# Parcel100 2.0 User Manual
 
 <!-- install-blurb:start -->
 > ### Installing Parcel100 - read this first
@@ -34,7 +34,7 @@ No QGIS installation is required for production and no third-party Python packag
 
 ## Start Parcel100
 
-1. Download [`Parcel100_v1.5.2.zip`](downloads/Parcel100_v1.5.2.zip) and extract it. It contains a `Parcel100_v1.5.2` folder.
+1. Download [`Parcel100_v2.0.zip`](downloads/Parcel100_v2.0.zip) and extract it. It contains a `Parcel100_v2.0` folder.
 2. Python 3: nothing to install by hand. Since this version the .bat does it for you: if Python is missing it asks **Install Python now? [Y/N]** - answer **Y** (installs just for you, no admin; on an older PC it can take several minutes - don't close the window).
 
 The folder holds just three things - keep them together:
@@ -51,7 +51,7 @@ Double-click:
 Parcel100.bat
 ```
 
-The GUI opens as **Parcel100 1.5** (1.5.1 is the 1.5 program in a tidier folder).
+The GUI opens as **Parcel100 2.0** (the 1.5 program; the whole family moved to 2.0 on 8 Nov 2026).
 
 ## What's in the zip
 

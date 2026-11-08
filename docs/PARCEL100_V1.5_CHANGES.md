@@ -2,7 +2,7 @@
 
 **Released:** 2026-11-01
 **Type:** discovery and hardening release.
-**Download:** [`downloads/Parcel100_v1.5.zip`](../downloads/Parcel100_v1.5.zip)
+**Download:** [`archive/Parcel100_v1.5.zip`](../archive/Parcel100_v1.5.zip)
 
 **For a normal build the output is unchanged.** Master 4 cells, file names, the ID query and its four-part fallback, batching, polygon conversion and the GeoJSON layout are the same as 1.4. For an ordinary service, 1.5 writes the same 100 files as 1.4, byte for byte.
 
@@ -83,4 +83,4 @@ The window title and package README show 1.5. `Parcel100.bat` is unchanged.
 | `Parcel100.py` 1.5 | `ba0627bcfccf65e866a1515f1d70ad8069b4d8475d6542e20431bdbe613235b1` |
 | `Parcel100.py` 1.4 (previous) | `5693c5c663e349569fad8e764ea790111ca044e9b2eed4bfba80b1511a9e408c` |
 
-The download zip is rebuilt automatically by the repository's GitHub Actions workflow (now set to `Parcel100_v1.5.zip`), so its own checksum can change with each rebuild; the `Parcel100.py` inside it is the file above. `downloads/Parcel100_v1.4.zip` stays in the repository so existing links keep working.
+The download zip is rebuilt automatically by the repository's GitHub Actions workflow (now set to `Parcel100_v1.5.zip`), so its own checksum can change with each rebuild; the `Parcel100.py` inside it is the file above. `archive/Parcel100_v1.4.zip` stays in the repository so existing links keep working.

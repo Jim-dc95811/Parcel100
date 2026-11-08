@@ -1,5 +1,7 @@
 # Parcel100 Continuity / Handoff
 
+**2026-11-08 (Claude) - 2.0 Reference:** Jim moved the whole family to 2.0. `downloads/Parcel100_v2.0.zip` (folder `Parcel100_v2.0`, built by the workflow); program = 1.5 with only `VERSION = "2.0"` changed. Older zips in `archive/`. Tag `v2.0-reference`.
+
 **2026-11-04 update (Claude):** 'What's in the zip' sheet `images/parcel100_whats_in_the_zip*.png` - every file in the download explained in plain words (Jim's idea), linked under the download heading on the README and the front page and shown in the user manual (PDF rebuilt). Made by `tools/graphics/make_zip_sheets.py` in ArcGIS-Earth-Unlocked; **if the zip contents change, update its card list there and re-render.**
 
 ## Current state
@@ -19,10 +21,10 @@ Main files:
 ```text
 Parcel100.bat
 System Files/Parcel100.py
-downloads/Parcel100_v1.5.1.zip   (previous: downloads/Parcel100_v1.5.zip and _v1.4.zip, kept for existing links)
+archive/Parcel100_v1.5.1.zip   (previous: archive/Parcel100_v1.5.zip and _v1.4.zip, kept for existing links)
 ```
 
-**1.5.1 (2026-11-06, launcher/layout only - Jim's one-obvious-file rule):** the zip holds `Parcel100_v1.5.1/Parcel100.bat` + `System Files/Parcel100.py` (program = 1.5, `ba0627bc...`); `PACKAGE_README.txt` removed; the GitHub Actions workflow builds `downloads/Parcel100_v1.5.1.zip` from `System Files/Parcel100.py` + `Parcel100.bat`.
+**1.5.1 (2026-11-06, launcher/layout only - Jim's one-obvious-file rule):** the zip holds `Parcel100_v1.5.1/Parcel100.bat` + `System Files/Parcel100.py` (program = 1.5, `ba0627bc...`); `PACKAGE_README.txt` removed; the GitHub Actions workflow builds `archive/Parcel100_v1.5.1.zip` from `System Files/Parcel100.py` + `Parcel100.bat`.
 
 The program uses only the Python standard library.
 
