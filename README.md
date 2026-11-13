@@ -15,7 +15,9 @@
 > 2. **Windows security warning:** Windows may warn about any program downloaded from the internet. Click **More info > Run anyway** (blue "Windows protected your PC" screen) or **Run**. To avoid the warning, right-click the zip > **Properties** > tick **Unblock** > **OK** before extracting.
 > 3. **Installing Python:** if the installer shows **"Add python.exe to PATH"**, tick it.
 
-### **⬇️ [3. DOWNLOAD PARCEL100 v2.1](downloads/Parcel100_v2.1.zip)**
+### **⭐ [3. Get Parcel100 from Google Drive](https://drive.google.com/drive/folders/1jsxVTDsYdgJHibhCCeI9I69FsG0qMGgc?usp=sharing)**
+
+*Easiest, no download warning: open the Drive folder, open **Parcel100_v2.1**, and run its one `.bat`. Prefer GitHub? Developers can grab the [direct zip](downloads/Parcel100_v2.1.zip) - a direct download can trip a Windows antivirus false alarm, which Drive avoids.*
 **📖 [User manual](USER_MANUAL.md)**
 **🗂️ [What's in the zip - every file explained](images/parcel100_whats_in_the_zip_full.png)**
 **⭐ EASIEST WAY — [Get all 11 tools from Google Drive](https://drive.google.com/drive/folders/1jsxVTDsYdgJHibhCCeI9I69FsG0qMGgc?usp=sharing)** — no download warnings, the whole series is under 10 MB. Open the folder, open the tool you want, and run its one `.bat`.
